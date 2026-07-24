@@ -20,6 +20,14 @@ export function GridBanner({ connectedAddress }: GridBannerProps) {
           ? "Showing diagnostics for this Grid's profile."
           : "Connect to see the full risk breakdown for this Grid's profile."}
       </p>
+      <a
+        href="/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 inline-block text-sm text-paper-dim underline decoration-hairline underline-offset-4 transition hover:text-paper"
+      >
+        Open full UP Health to check another profile ↗
+      </a>
     </div>
   );
 }
