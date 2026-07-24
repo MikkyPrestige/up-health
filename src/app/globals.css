@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+:root {
+  --color-ink: #0d1210;
+  --color-panel: #161d1a;
+  --color-panel-raised: #1c2420;
+  --color-hairline: #2a332f;
+  --color-paper: #edefea;
+  --color-paper-dim: #a9b3ad;
+  --color-vital: #4fd8b0;
+  --color-vital-dim: #2c7d63;
+  --color-signal: #e8a548;
+  --color-signal-dim: #8a6530;
+  --color-coral: #e2665a;
+  --color-grid-line: rgba(79, 216, 176, 0.14);
+  --color-glow: rgba(79, 216, 176, 0.1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-ink: #f4f5f0;
+    --color-panel: #e9ebe3;
+    --color-panel-raised: #dee1d7;
+    --color-hairline: #cbd0c3;
+    --color-paper: #121a15;
+    --color-paper-dim: #5b655e;
+    --color-vital: #0f7a5c;
+    --color-vital-dim: #a8d9c8;
+    --color-signal: #a35a0a;
+    --color-signal-dim: #e3c398;
+    --color-coral: #ab362b;
+    --color-grid-line: rgba(15, 122, 92, 0.07);
+    --color-glow: rgba(15, 122, 92, 0.09);
+  }
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-panel: var(--color-panel);
+  --color-panel-raised: var(--color-panel-raised);
+  --color-hairline: var(--color-hairline);
+  --color-paper: var(--color-paper);
+  --color-paper-dim: var(--color-paper-dim);
+  --color-vital: var(--color-vital);
+  --color-vital-dim: var(--color-vital-dim);
+  --color-signal: var(--color-signal);
+  --color-signal-dim: var(--color-signal-dim);
+  --color-coral: var(--color-coral);
+
+  --font-sans: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, monospace;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--color-ink);
+  /* A faint diagnostic-grid texture plus a soft glow in one corner - grounded
+     in the "monitor readout" concept rather than a decorative gradient blob.
+     Both layers are theme-aware and stay subtle in either mode. */
+  background-image: radial-gradient(
+      ellipse 900px 560px at 15% -8%,
+      var(--color-glow),
+      transparent 60%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      var(--color-grid-line) 0px,
+      var(--color-grid-line) 1px,
+      transparent 1px,
+      transparent 48px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--color-grid-line) 0px,
+      var(--color-grid-line) 1px,
+      transparent 1px,
+      transparent 48px
+    );
+  background-attachment: fixed;
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+}
+
+/* The signature element: a thin vitals waveform rule that draws itself once
+   on load, dividing a result's summary from its detail - a literal, restrained
+   nod to "Health" rather than a decorative flourish. */
+@keyframes vitals-draw {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.vitals-rule path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: vitals-draw 1.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vitals-rule path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .animate-ping {
+    animation: none;
+  }
+}
