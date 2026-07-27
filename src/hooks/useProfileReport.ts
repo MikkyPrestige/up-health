@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { batchedMap } from "@/lib/util/batch";
 import { getRawControllerAddresses } from "@/lib/blockchain/profileLookup";
 import {
   getControllerPermissions,
@@ -19,6 +20,7 @@ import {
   checkConcentratedPower,
   checkNoRecoveryPath,
   checkSuspiciousDelegate,
+  checkNoControllers,
   type RiskFlagResult,
 } from "@/lib/risk/riskFlags";
 import { generateSummary } from "@/lib/risk/summary";
@@ -46,7 +48,7 @@ export type ProfileReportStatus =
   | { state: "idle" }
   | { state: "loading" }
   | { state: "invalid_format" }
-  | { state: "not_found" }
+  | { state: "not_found"; reason: "no_code" | "unrecognized_contract" }
   | { state: "network_error"; message: string }
   | { state: "found"; report: ProfileReport };
 
@@ -72,13 +74,15 @@ export function useProfileReport(
       if (cancelled) return;
 
       if (lookup.status !== "found") {
-        setResult({
-          address,
-          status:
-            lookup.status === "network_error"
-              ? { state: "network_error", message: lookup.message }
-              : { state: lookup.status },
-        });
+        let status: ProfileReportStatus;
+        if (lookup.status === "network_error") {
+          status = { state: "network_error", message: lookup.message };
+        } else if (lookup.status === "not_found") {
+          status = { state: "not_found", reason: lookup.reason };
+        } else {
+          status = { state: "invalid_format" };
+        }
+        setResult({ address, status });
         return;
       }
 
@@ -93,33 +97,31 @@ export function useProfileReport(
       if (cancelled) return;
 
       // Contract-vs-wallet detection is public info regardless of ownership
-      // (Proposal 6.4) - computed for every controller either way.
-      const contractFlags = await Promise.all(
-        breakdown.map((controller) => isContractAddress(controller.address))
+      // (Proposal 6.4) - computed for every controller either way. Batched
+      // rather than fired all at once, so a profile with many controllers
+      // doesn't burst the RPC endpoint with dozens of simultaneous calls.
+      const contractFlags = await batchedMap(breakdown, (controller) =>
+        isContractAddress(controller.address)
       );
       if (cancelled) return;
 
       // What a controller actually is (Profile/Vault/LSP1 Delegate/plain
       // contract/wallet) is likewise just factual, public info - not gated
-      // to the verified owner.
-      const controllerKinds = await Promise.all(
-        breakdown.map((controller, i) =>
-          getControllerKind(controller.address, contractFlags[i])
-        )
+      // to the verified owner. Also batched, since this can issue up to 3
+      // RPC calls per contract-type controller.
+      const controllerKinds = await batchedMap(
+        breakdown,
+        (controller, i) => getControllerKind(controller.address, contractFlags[i])
       );
       if (cancelled) return;
 
       // If a controller is itself a Universal Profile, fetch its own name
       // too (e.g. a dedicated recovery profile named "recovery-up4") -
       // reuses the exact same metadata lookup used for the main profile.
-      const controllerNames = await Promise.all(
-        controllerKinds.map((kind, i) =>
-          kind === "profile"
-            ? getProfileMetadata(breakdown[i].address).then(
-                (m) => m.name ?? null
-              )
-            : Promise.resolve(null)
-        )
+      const controllerNames = await batchedMap(controllerKinds, (kind, i) =>
+        kind === "profile"
+          ? getProfileMetadata(breakdown[i].address).then((m) => m.name ?? null)
+          : Promise.resolve(null)
       );
       if (cancelled) return;
 
@@ -154,6 +156,7 @@ export function useProfileReport(
           checkConcentratedPower(breakdown),
           checkNoRecoveryPath(breakdown),
           checkSuspiciousDelegate(delegateAddress, delegateHasCode),
+          checkNoControllers(breakdown),
         ];
       }
 

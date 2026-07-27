@@ -24,14 +24,14 @@ export function AddressForm({
   onDisconnect,
 }: AddressFormProps) {
   return (
-    <div className="w-full max-w-2xl">
+    <div className="hero-enter w-full max-w-2xl">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-vital">
         Universal Profile diagnostics
       </p>
-      <div className="mt-3 flex items-center gap-3">
+      <div className="mt-3 flex flex-wrap items-center gap-2.5 sm:gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-mark.png" alt="" className="h-9 w-9" />
-        <h1 className="font-sans text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
+        <img src="/logo-mark.png" alt="" className="h-7 w-7 shrink-0 sm:h-9 sm:w-9" />
+        <h1 className="font-sans text-2xl font-semibold tracking-tight text-paper sm:text-4xl md:text-5xl">
           UP Health
         </h1>
       </div>
@@ -55,11 +55,11 @@ export function AddressForm({
           placeholder="0x..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="flex-1 rounded-md border border-hairline bg-panel px-4 py-3 font-mono text-sm text-paper placeholder:text-paper-dim/60 focus:border-vital focus:outline-none focus-visible:ring-2 focus-visible:ring-vital/40"
+          className="flex-1 rounded-md border border-hairline bg-panel px-4 py-3 font-mono text-base text-paper placeholder:text-paper-dim/60 focus:border-vital focus:outline-none focus-visible:ring-2 focus-visible:ring-vital/40"
         />
         <button
           type="submit"
-          className="rounded-md bg-vital px-6 py-3 font-sans text-sm font-semibold text-ink transition hover:bg-vital/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vital/40"
+          className="rounded-md bg-vital px-6 py-3 font-sans text-sm font-semibold text-ink transition hover:-translate-y-0.5 hover:bg-vital/90 hover:shadow-lg hover:shadow-vital/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vital/40"
         >
           Check profile
         </button>

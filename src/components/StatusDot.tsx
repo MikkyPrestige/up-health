@@ -1,14 +1,16 @@
 interface StatusDotProps {
-  tone: "clear" | "flagged" | "neutral";
+  tone: "clear" | "flagged" | "critical" | "neutral";
 }
 
 export function StatusDot({ tone }: StatusDotProps) {
   const colorClass =
-    tone === "flagged"
-      ? "bg-signal"
-      : tone === "clear"
-        ? "bg-vital"
-        : "bg-paper-dim";
+    tone === "critical"
+      ? "bg-coral"
+      : tone === "flagged"
+        ? "bg-signal"
+        : tone === "clear"
+          ? "bg-vital"
+          : "bg-paper-dim";
 
   return (
     <span

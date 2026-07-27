@@ -4,14 +4,14 @@ interface GridBannerProps {
 
 export function GridBanner({ connectedAddress }: GridBannerProps) {
   return (
-    <div className="w-full max-w-2xl">
+    <div className="hero-enter w-full max-w-2xl">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-vital">
         Universal Profile diagnostics
       </p>
-      <div className="mt-3 flex items-center gap-2.5">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-mark.png" alt="" className="h-7 w-7" />
-        <h1 className="font-sans text-3xl font-semibold tracking-tight text-paper">
+        <img src="/logo-mark.png" alt="" className="h-6 w-6 shrink-0" />
+        <h1 className="font-sans text-xl font-semibold tracking-tight text-paper">
           UP Health
         </h1>
       </div>

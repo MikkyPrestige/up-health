@@ -1,0 +1,30 @@
+import {
+  Crown,
+  KeyRound,
+  Coins,
+  ArrowRightLeft,
+  Eye,
+  Box,
+  PenLine,
+  Lock,
+  Zap,
+  Link2,
+  Puzzle,
+  RefreshCw,
+  type LucideIcon,
+} from "lucide-react";
+
+export const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  ownership: Crown,
+  governance: KeyRound,
+  move_funds: Coins,
+  call_contracts: ArrowRightLeft,
+  read_only: Eye,
+  deploy: Box,
+  edit_data: PenLine,
+  sign_encrypt: Lock,
+  gasless: Zap,
+  delegates: Link2,
+  extensions: Puzzle,
+  reentrancy: RefreshCw,
+};

@@ -5,7 +5,7 @@ import { luksoClient, RPC_URL } from "./luksoClient";
 
 export type ProfileLookupResult =
   | { status: "invalid_format" }
-  | { status: "not_found" }
+  | { status: "not_found"; reason: "no_code" | "unrecognized_contract" }
   | { status: "network_error"; message: string }
   | { status: "found"; controllers: `0x${string}`[] };
 
@@ -32,7 +32,11 @@ export async function getRawControllerAddresses(
   }
 
   if (!hasCode) {
-    return { status: "not_found" };
+    // No contract code at all almost always means this is a plain wallet
+    // (EOA) — a very common mix-up is pasting a controller/wallet address
+    // instead of the Universal Profile it controls, so this gets its own
+    // specific, more helpful message rather than the generic one below.
+    return { status: "not_found", reason: "no_code" };
   }
 
   const erc725 = new ERC725(LSP6Schema, address, RPC_URL, {});
@@ -46,7 +50,7 @@ export async function getRawControllerAddresses(
   } catch {
     // Has contract code, but isn't a readable ERC725Y/LSP6 profile —
     // treated as "no Universal Profile or Vault found here," not a failure.
-    return { status: "not_found" };
+    return { status: "not_found", reason: "unrecognized_contract" };
   }
 }
 

@@ -35,7 +35,7 @@ export function ProfileReportView({
   );
 
   return (
-    <div className="w-full">
+    <div className="hero-enter w-full">
       <div className="mx-auto max-w-2xl">
         {hasConnectedWallet && (
           <div className="mb-4 flex items-center gap-3 text-sm">
@@ -103,19 +103,27 @@ export function ProfileReportView({
         <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-paper-dim">
           Controllers ({report.controllers.length})
         </h2>
-        <div className="mt-3 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {report.controllers.map((controller) => (
-            <ControllerRow
-              key={controller.address}
-              controller={controller}
-              isFlagged={flaggedAddresses.has(
-                controller.address.toLowerCase()
-              )}
-              onExpand={() => setExpandedAddress(controller.address)}
-              showStaleness={report.isVerifiedOwner}
-            />
-          ))}
-        </div>
+        {report.controllers.length === 0 ? (
+          <p className="mt-3 text-sm text-paper-dim">
+            {report.isVerifiedOwner
+              ? "No controllers to show - see the finding above."
+              : "No controllers found on this profile."}
+          </p>
+        ) : (
+          <div className="mt-3 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {report.controllers.map((controller) => (
+              <ControllerRow
+                key={controller.address}
+                controller={controller}
+                isFlagged={flaggedAddresses.has(
+                  controller.address.toLowerCase()
+                )}
+                onExpand={() => setExpandedAddress(controller.address)}
+                showStaleness={report.isVerifiedOwner}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {expandedController && (
@@ -123,6 +131,9 @@ export function ProfileReportView({
           controller={expandedController}
           onClose={() => setExpandedAddress(null)}
           showStaleness={report.isVerifiedOwner}
+          isFlagged={flaggedAddresses.has(
+            expandedController.address.toLowerCase()
+          )}
         />
       )}
     </div>

@@ -10,6 +10,8 @@ interface BlockscoutTransactionsResponse {
   items?: BlockscoutTransaction[];
 }
 
+import { batchedMap } from "../util/batch";
+
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -55,19 +57,10 @@ export async function getLastActivityTimestamps(
   batchSize = 3,
   delayBetweenBatchesMs = 250
 ): Promise<(string | null)[]> {
-  const results: (string | null)[] = [];
-
-  for (let i = 0; i < addresses.length; i += batchSize) {
-    const batch = addresses.slice(i, i + batchSize);
-    const batchResults = await Promise.all(
-      batch.map((address) => getLastActivityTimestamp(address))
-    );
-    results.push(...batchResults);
-
-    if (i + batchSize < addresses.length) {
-      await wait(delayBetweenBatchesMs);
-    }
-  }
-
-  return results;
+  return batchedMap(
+    addresses,
+    (address) => getLastActivityTimestamp(address),
+    batchSize,
+    delayBetweenBatchesMs
+  );
 }

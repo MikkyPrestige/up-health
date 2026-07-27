@@ -1,8 +1,17 @@
 import type { ControllerBreakdown } from "../blockchain/controllerPermissions";
 
 export interface RiskFlagResult {
-  id: "concentrated_power" | "no_recovery_path" | "suspicious_delegate";
+  id:
+    | "concentrated_power"
+    | "no_recovery_path"
+    | "suspicious_delegate"
+    | "no_controllers";
   triggered: boolean;
+  // "critical" is reserved for a fundamentally different category than the
+  // others: not "this is risky," but "this has already happened and can't
+  // be undone through the profile's own permission system." Only
+  // no_controllers uses it today.
+  severity: "warning" | "critical";
   title: string;
   explanation: string;
   nextStep?: string;
@@ -49,6 +58,7 @@ export function checkConcentratedPower(
   return {
     id: "concentrated_power",
     triggered: affected.length > 0,
+    severity: "warning",
     title: "One controller holds both governing and broad execution power",
     explanation:
       "This controller can add new controllers or edit permissions, and can " +
@@ -73,6 +83,7 @@ export function checkNoRecoveryPath(
   return {
     id: "no_recovery_path",
     triggered,
+    severity: "warning",
     title: "No recovery path if this controller is lost",
     explanation:
       "Only one controller exists on this profile, with no separate recovery " +
@@ -104,19 +115,47 @@ export function checkSuspiciousDelegate(
   return {
     id: "suspicious_delegate",
     triggered,
-    title: "Universal Receiver Delegate points to an unverifiable address",
+    severity: "warning",
+    title: "Automatic reaction code points to an unverifiable address",
     explanation:
-      "A Universal Receiver Delegate is configured, but the address it points " +
-      "to has no verifiable contract code. This delegate runs automatically " +
-      "whenever the profile receives assets, so an unusual or unverifiable " +
-      "delegate is worth a closer look.",
+      "This profile has code configured to run automatically whenever it " +
+      "receives assets or notifications (this is called a 'Universal " +
+      "Receiver Delegate'), but the address it points to has no verifiable " +
+      "contract code. Since this code runs automatically, an unusual or " +
+      "unverifiable address here is worth a closer look.",
     nextStep:
-      "Confirm this delegate address is one you recognize and intended to set. " +
+      "Confirm this address is one you recognize and intended to set. " +
       "If not, consider removing or replacing it.",
     nextStepUrl: PERMISSION_MANAGER_URL,
     affectedControllers:
       triggered && delegateAddress
         ? [delegateAddress as `0x${string}`]
         : undefined,
+  };
+}
+
+// Flag 4: the profile has zero controllers at all. This is categorically
+// different from "no recovery path" (Flag 2) - that flag describes a risk
+// that could still be prevented; this describes something that has already
+// happened and cannot be undone through the profile's own permission
+// system. No controller exists to grant any new permission, ever again, so
+// there is deliberately no "next step" suggesting an in-app action - none
+// exists. (Whether a 0-controller state is even reachable on-chain is an
+// open question; this flag exists so the tool tells the truth if it is.)
+export function checkNoControllers(
+  controllers: ControllerBreakdown[]
+): RiskFlagResult {
+  const triggered = controllers.length === 0;
+
+  return {
+    id: "no_controllers",
+    triggered,
+    severity: "critical",
+    title: "This profile has no controllers at all",
+    explanation:
+      "This profile has zero controllers. Nobody, including its original " +
+      "owner, can act on this profile anymore - there is no way to grant " +
+      "new permissions or regain control through the profile's normal " +
+      "permission system.",
   };
 }

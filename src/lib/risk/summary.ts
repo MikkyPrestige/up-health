@@ -5,7 +5,8 @@ const SHORT_LABELS: Record<RiskFlagResult["id"], string> = {
     "a controller can both govern permissions and move funds or make calls",
   no_recovery_path: "only one controller exists, with no recovery path",
   suspicious_delegate:
-    "the Universal Receiver Delegate points to an unverifiable address",
+    "this profile's automatic reaction code points to an unverifiable address",
+  no_controllers: "this profile has no controllers at all",
 };
 
 // Builds the single summary sentence shown at the top of results (Handbook

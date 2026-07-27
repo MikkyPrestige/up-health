@@ -50,7 +50,9 @@ export function ProfileChecker() {
         {status.state === "invalid_format" && (
           <StatusMessage kind="invalid_format" />
         )}
-        {status.state === "not_found" && <StatusMessage kind="not_found" />}
+        {status.state === "not_found" && (
+          <StatusMessage kind="not_found" reason={status.reason} />
+        )}
         {status.state === "network_error" && (
           <StatusMessage kind="network_error" detail={status.message} />
         )}

@@ -1,0 +1,100 @@
+Part 1
+
+CURRENT STATE:
+What’s Been Completed ✅
+Planning is fully done. Nothing has been built yet.
+● ✅ UP_HEALTH_PROPOSAL_v2.md — the complete vision document: the problem,
+why this project over the two prior pivots (Universal Index, Tessera), core design
+principles, every confirmed feature, the research findings behind the risk-flag logic,
+what’s explicitly deferred, and success criteria
+● ✅ UP_HEALTH_BUILD_PLAN.md — the five-phase conceptual build plan (Foundation
+→ Permission Decoding → Risk Analysis & Identity Gating → Interface & Dual-Context
+Support → Polish & Launch Readiness), each phase with a goal, what needs to exist,
+how to verify it, and common pitfalls
+● ✅ UP_HEALTH_DEV_HANDBOOK.md — the hands-on companion to the Build Plan:
+exact packages to use, file/folder structure, naming conventions, numbered steps with
+“done when” checks, and a cross-reference table mapping every Proposal section to
+exactly where it gets built
+What Has NOT Been Done ❌
+● ❌ No project has been scaffolded
+● ❌ No packages installed
+● ❌ No code written
+● ❌ No deployment set up
+● ❌ Nothing tested
+I am at the very beginning of Phase 1, Step 1.1 (project scaffolding).
+
+Part 2
+
+KEY DECISIONS ALREADY MADE (Don’t Re-Litigate These):
+These were each discussed and settled already — if a new session suggests reconsidering any
+of these, that’s a signal something’s off, not a reason to actually redo the discussion:
+Why This Project Exists At All;
+Two prior directions were considered and moved away from:
+● Universal Index (ecosystem discovery platform) — shelved because lukso.tools already
+serves this purpose and has official in-wallet adoption
+● Tessera (soulbound reputation protocol) — paused, not abandoned, because launching
+a project touching real staked funds as a first public release, with no prior on-chain track
+record, carries real reputational risk
+UP Health is the deliberate low-risk, high-utility project to build first, establishing credibility
+before returning to Tessera.
+Core Design Principles (Non-Negotiable):
+1. Diagnose, don’t treat — never edit permissions directly, always link out to the existing
+LSP6 permission manager for fixes
+2. Identity-matched gating, not simple wallet-gating — sensitive flags only shown when the
+connected wallet matches the queried profile, not merely “any wallet connected.”
+Anonymous/mismatched lookups only see basic, non-sensitive info.
+3. Stay lean — no database, no persistent backend, everything read live from-chain per
+lookup
+Confirmed Scope Decisions:
+● Network: LUKSO Mainnet only. No testnet, no other chains, unless LUKSO itself
+launches a publicly-discussed cross-ecosystem integration in the future.
+● Vaults: LSP9 Vaults are supported quietly in v1 (same underlying LSP6 mechanism as
+Profiles, so it’s nearly free) — but with no dedicated UI/marketing calling attention to it as
+a distinct feature.
+● Multisig detection: Deferred to Phase 2 (post-launch). v1 only does basic “is this a
+contract or a wallet” detection, not specific multisig-pattern recognition — even though
+research confirmed multisig-as-controller is real and already used in LUKSO’s own
+official recovery infrastructure.
+● Wallet connection: Two genuinely different connection paths — @lukso/up-provider for
+Grid-embedded context, standard browser-extension connection for standalone visits —
+converging on the same identity-matching logic once connected. This is explicitly not one
+unified mechanism; it’s two paths built to feel like one experience.
+● Naming: “UP Health,” not “UP Doctor” — because “Doctor” implies treatment, and this
+tool only diagnoses.
+Research Findings Already Resolved (Don’t Re-Research These):
+
+● LUKSO’s own recovery-controller pattern confirms that “a controller can add other
+controllers” is not inherently risky on its own (it mirrors LUKSO’s own official design) —
+it’s only flagged when bundled with broad execution/value-transfer permissions at the
+same time
+● A profile with only one controller and no recovery path is a legitimate flag, since
+LUKSO’s own architecture explicitly recommends against that
+● Multisig-as-controller is confirmed real and already used in LUKSO’s own infrastructure
+(Safe-based Recovery Profile), which is why it’s slated for Phase 2 rather than dismissed
+entirely — the deferral is about detection complexity, not about it being rare
+● LUKSO’s Mainnet block explorer runs on Blockscout, whose API conventions are
+consistent across other networks’ deployments — but the exact endpoint path still needs
+confirming against LUKSO’s specific instance once you reach that step (Handbook
+Phase 3, Step 3.5)
+
+Part 3
+
+WHAT TO DO NEXT:
+Immediate Next Step;
+Open UP_HEALTH_DEV_HANDBOOK.md and begin Phase 1, Step 1.1 — Scaffold the Project.
+Reading Order for a Fresh Session:
+1. This migration summary (you’re reading it now)
+2. UP_HEALTH_PROPOSAL_v2.md — if you need the “why” behind anything
+3. UP_HEALTH_BUILD_PLAN.md — the conceptual shape of what’s being built
+4. UP_HEALTH_DEV_HANDBOOK.md — the actual step-by-step, start here for real
+building
+Workflow Reminders:
+● No commits without being explicitly asked
+● No co-author attribution ever added to commits
+● Follow the Handbook’s structural specifics (exact package names, file structure) rather
+than improvising alternatives, unless something in the Handbook is genuinely wrong
+● No code snippets belong in any of the three planning docs — if a new session starts
+adding code to Proposal/Build Plan/Handbook, that’s drifting from the established
+documentation style
+● Test scenarios for Phase 3 risk flags should use deliberately constructed test profiles, not
+real users’ profiles (Handbook Step 3.6)
