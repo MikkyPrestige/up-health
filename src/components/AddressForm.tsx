@@ -28,14 +28,17 @@ export function AddressForm({
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-vital">
         Universal Profile diagnostics
       </p>
-      <div className="mt-3 flex flex-wrap items-center gap-2.5 sm:gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-mark.png" alt="" className="h-7 w-7 shrink-0 sm:h-9 sm:w-9" />
-        <h1 className="font-sans text-2xl font-semibold tracking-tight text-paper sm:text-4xl md:text-5xl">
-          UP Health
+      <div className="mt-4 flex items-center gap-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-vital/10 ring-1 ring-vital/25 sm:h-16 sm:w-16">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.png" alt="" className="h-8 w-8 sm:h-9 sm:w-9" />
+        </div>
+        <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
+          <span className="text-vital">UP</span>{" "}
+          <span className="text-paper">Health</span>
         </h1>
       </div>
-      <p className="mt-4 max-w-lg text-balance text-paper-dim">
+      <p className="mt-5 max-w-lg text-balance text-paper-dim">
         Paste a Universal Profile address. See exactly who can do what to it,
         and whether anything is worth a closer look.
       </p>

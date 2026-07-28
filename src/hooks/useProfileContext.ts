@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWalletConnection } from "./useWalletConnection";
 import { useGridWallet } from "./useGridWallet";
 import { isEmbeddedInGrid } from "@/lib/wallet/gridDetection";
@@ -16,7 +16,7 @@ export interface ProfileContextState {
   setManualAddressInput: (value: string) => void;
   // Commits the current input text as the address to actually look up.
   submitManualAddress: () => void;
-  connectStandaloneWallet: () => Promise<void>;
+  connectStandaloneWallet: () => void;
   disconnectStandaloneWallet: () => Promise<void>;
   goToMyProfile: () => void;
   isConnecting: boolean;
@@ -48,16 +48,23 @@ export function useProfileContext(): ProfileContextState {
     setSubmittedAddress(manualAddressInput.trim());
   }, [manualAddressInput]);
 
-  // Connecting a wallet is a clear signal of intent ("show me my own
-  // profile") - so the freshly connected address replaces whatever was
-  // typed or previously submitted.
-  const connectStandaloneWallet = useCallback(async () => {
-    const address = await standalone.connect();
-    if (address) {
-      setManualAddressInput(address);
-      setSubmittedAddress(address);
+  // Connecting a wallet (or wagmi silently restoring a previous session on
+  // reload) is a clear signal of intent ("show me my own profile") - so
+  // whenever the connected address changes to a new value, it replaces
+  // whatever was typed or previously submitted. Reactive rather than tied
+  // to the connect() call directly, since RainbowKit's connection flow
+  // completes asynchronously via a modal, not as an awaitable return value.
+  const previousConnectedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      standalone.connectedAddress &&
+      standalone.connectedAddress !== previousConnectedRef.current
+    ) {
+      setManualAddressInput(standalone.connectedAddress);
+      setSubmittedAddress(standalone.connectedAddress);
     }
-  }, [standalone]);
+    previousConnectedRef.current = standalone.connectedAddress;
+  }, [standalone.connectedAddress]);
 
   const goToMyProfile = useCallback(() => {
     if (connectedAddress) {
@@ -73,7 +80,7 @@ export function useProfileContext(): ProfileContextState {
     manualAddressInput,
     setManualAddressInput,
     submitManualAddress,
-    connectStandaloneWallet,
+    connectStandaloneWallet: standalone.connect,
     disconnectStandaloneWallet: standalone.disconnect,
     goToMyProfile,
     isConnecting: standalone.isConnecting,

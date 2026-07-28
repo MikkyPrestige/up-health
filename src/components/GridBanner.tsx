@@ -8,11 +8,14 @@ export function GridBanner({ connectedAddress }: GridBannerProps) {
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-vital">
         Universal Profile diagnostics
       </p>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-mark.png" alt="" className="h-6 w-6 shrink-0" />
-        <h1 className="font-sans text-xl font-semibold tracking-tight text-paper">
-          UP Health
+      <div className="mt-3 flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-vital/10 ring-1 ring-vital/25">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.png" alt="" className="h-10 w-10" />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight">
+          <span className="text-vital">UP</span>{" "}
+          <span className="text-paper">Health</span>
         </h1>
       </div>
       <p className="mt-2 text-sm text-paper-dim">
