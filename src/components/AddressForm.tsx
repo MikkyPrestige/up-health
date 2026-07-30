@@ -29,9 +29,9 @@ export function AddressForm({
         Universal Profile diagnostics
       </p>
       <div className="mt-4 flex items-center gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-vital/10 ring-1 ring-vital/25 sm:h-16 sm:w-16">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-vital/10 ring-1 ring-vital/25 sm:h-20 sm:w-20">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark.png" alt="" className="h-8 w-8 sm:h-9 sm:w-9" />
+          <img src="/logo-mark.png" alt="" className="h-11 w-11 sm:h-14 sm:w-14" />
         </div>
         <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
           <span className="text-vital">UP</span>{" "}

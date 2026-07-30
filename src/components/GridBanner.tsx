@@ -9,9 +9,9 @@ export function GridBanner({ connectedAddress }: GridBannerProps) {
         Universal Profile diagnostics
       </p>
       <div className="mt-3 flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-vital/10 ring-1 ring-vital/25">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-vital/10 ring-1 ring-vital/25">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark.png" alt="" className="h-10 w-10" />
+          <img src="/logo-mark.png" alt="" className="h-7 w-7" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight">
           <span className="text-vital">UP</span>{" "}
