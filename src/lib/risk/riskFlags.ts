@@ -5,12 +5,13 @@ export interface RiskFlagResult {
     | "concentrated_power"
     | "no_recovery_path"
     | "suspicious_delegate"
-    | "no_controllers";
+    | "no_controllers"
+    | "no_key_manager";
   triggered: boolean;
   // "critical" is reserved for a fundamentally different category than the
   // others: not "this is risky," but "this has already happened and can't
-  // be undone through the profile's own permission system." Only
-  // no_controllers uses it today.
+  // be undone through the profile's own permission system." no_controllers
+  // and no_key_manager use it today.
   severity: "warning" | "critical";
   title: string;
   explanation: string;
@@ -25,9 +26,15 @@ const PERMISSION_MANAGER_URL = "https://permissioncontrol.app";
 const GOVERNING_PERMISSIONS = ["ADDCONTROLLER", "EDITPERMISSIONS"];
 
 // Permissions treated as "broad execution or value-transfer" for this flag.
-// Deliberately limited to capabilities that move funds or execute arbitrary
-// calls, per the Proposal's own wording - not every powerful permission
-// (e.g. DEPLOY, STATICCALL) is included here.
+// Deliberately limited to capabilities that move funds, execute arbitrary
+// calls, or write arbitrary data - per the Proposal's own wording, not
+// every powerful permission (e.g. DEPLOY, STATICCALL) is included here.
+// SUPER_SETDATA is included alongside the transfer/call permissions because
+// unrestricted data-writing power is just as governance-relevant when
+// combined with ADDCONTROLLER/EDITPERMISSIONS: a controller that can both
+// govern the permission list AND write any ERC725Y data key it wants
+// (bypassing AllowedERC725YDataKeys entirely) can affect the profile just
+// as broadly as one that can transfer funds or make arbitrary calls.
 const BROAD_EXECUTION_OR_TRANSFER_PERMISSIONS = [
   "SUPER_TRANSFERVALUE",
   "TRANSFERVALUE",
@@ -35,6 +42,7 @@ const BROAD_EXECUTION_OR_TRANSFER_PERMISSIONS = [
   "CALL",
   "SUPER_DELEGATECALL",
   "DELEGATECALL",
+  "SUPER_SETDATA",
 ];
 
 // Flag 1: a controller holds governing power (can add controllers or edit
@@ -99,30 +107,36 @@ export function checkNoRecoveryPath(
   };
 }
 
-// Flag 3: a Universal Receiver Delegate is set, but points to an address with
-// no verifiable contract code - a simple, intentionally basic check (Proposal
-// Section 6.3), not deep contract analysis.
+// Flag 3: a Universal Receiver Delegate is set, but the address it points
+// to doesn't actually implement the LSP1UniversalReceiverDelegate
+// interface - a simple, intentionally basic check (Proposal Section 6.3),
+// not deep contract analysis. Refined from an earlier, weaker version of
+// this check that only asked "does this address have any contract code at
+// all" - that missed the case of a delegate address with code that simply
+// isn't a receiver delegate (e.g. a mistyped address that happens to point
+// at some unrelated contract).
 export function checkSuspiciousDelegate(
   delegateAddress: string | null,
-  delegateHasCode: boolean
+  delegateImplementsInterface: boolean
 ): RiskFlagResult {
   const isSet = Boolean(
     delegateAddress &&
       delegateAddress !== "0x0000000000000000000000000000000000000000"
   );
-  const triggered = isSet && !delegateHasCode;
+  const triggered = isSet && !delegateImplementsInterface;
 
   return {
     id: "suspicious_delegate",
     triggered,
     severity: "warning",
-    title: "Automatic reaction code points to an unverifiable address",
+    title: "Automatic reaction code doesn't implement the expected interface",
     explanation:
       "This profile has code configured to run automatically whenever it " +
       "receives assets or notifications (this is called a 'Universal " +
-      "Receiver Delegate'), but the address it points to has no verifiable " +
-      "contract code. Since this code runs automatically, an unusual or " +
-      "unverifiable address here is worth a closer look.",
+      "Receiver Delegate'), but the address it points to doesn't actually " +
+      "implement the interface a receiver delegate is expected to. Since " +
+      "this code runs automatically, an address here that doesn't " +
+      "implement the expected interface is worth a closer look.",
     nextStep:
       "Confirm this address is one you recognize and intended to set. " +
       "If not, consider removing or replacing it.",
@@ -157,5 +171,32 @@ export function checkNoControllers(
       "owner, can act on this profile anymore - there is no way to grant " +
       "new permissions or regain control through the profile's normal " +
       "permission system.",
+  };
+}
+
+// Flag 5: the profile's owner() doesn't actually point to a genuine LSP6
+// Key Manager contract. This is the most foundational flag of all - every
+// other flag, and every plain-language permission this tool explains,
+// assumes AddressPermissions[] is what's actually governing the profile.
+// If this flag is triggered, that assumption is false: whatever currently
+// owns the profile can act on it directly, and none of the permission data
+// anyone reads (including this tool) is being enforced by anything. Like
+// no_controllers, this describes something already true on-chain rather
+// than a risk that could still be prevented, so there's deliberately no
+// in-app "next step" - none exists.
+export function checkNoKeyManager(hasKeyManager: boolean): RiskFlagResult {
+  const triggered = !hasKeyManager;
+
+  return {
+    id: "no_key_manager",
+    triggered,
+    severity: "critical",
+    title: "This profile isn't actually controlled by a Key Manager",
+    explanation:
+      "This profile's owner isn't a genuine LSP6 Key Manager contract. " +
+      "That means the controller permissions this tool reads from " +
+      "AddressPermissions[] aren't actually being enforced - whatever " +
+      "currently owns this profile can act on it directly, regardless of " +
+      "what the permission data says.",
   };
 }

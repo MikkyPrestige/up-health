@@ -4,6 +4,7 @@ import {
   checkNoRecoveryPath,
   checkSuspiciousDelegate,
   checkNoControllers,
+  checkNoKeyManager,
 } from "./riskFlags";
 import type { ControllerBreakdown } from "../blockchain/controllerPermissions";
 
@@ -90,6 +91,31 @@ describe("checkConcentratedPower", () => {
     expect(checkConcentratedPower(controllers).triggered).toBe(true);
   });
 
+  it("triggers via SUPER_SETDATA just as it does via TRANSFERVALUE/CALL", () => {
+    // Gap #3: unrestricted data-writing power is just as governance-
+    // relevant as fund transfer or arbitrary calls when combined with
+    // governing power - a controller with this combination can bypass
+    // AllowedERC725YDataKeys entirely.
+    const controllers = [
+      makeController(ADDR_A, ["ADDCONTROLLER", "SUPER_SETDATA"]),
+    ];
+    expect(checkConcentratedPower(controllers).triggered).toBe(true);
+  });
+
+  it("does not trigger for SUPER_SETDATA alone, without governing power", () => {
+    const controllers = [makeController(ADDR_A, ["SUPER_SETDATA"])];
+    expect(checkConcentratedPower(controllers).triggered).toBe(false);
+  });
+
+  it("does not trigger for plain SETDATA combined with governing power", () => {
+    // Deliberately narrow, same as DEPLOY/STATICCALL: only SUPER_SETDATA
+    // (unrestricted) counts, not the scoped SETDATA permission.
+    const controllers = [
+      makeController(ADDR_A, ["ADDCONTROLLER", "SETDATA"]),
+    ];
+    expect(checkConcentratedPower(controllers).triggered).toBe(false);
+  });
+
   it("does not trigger and does not throw on an empty controller list", () => {
     const result = checkConcentratedPower([]);
     expect(result.triggered).toBe(false);
@@ -124,13 +150,13 @@ describe("checkNoRecoveryPath", () => {
 });
 
 describe("checkSuspiciousDelegate", () => {
-  it("triggers when a delegate is set but has no contract code", () => {
+  it("triggers when a delegate is set but doesn't implement the receiver delegate interface", () => {
     const result = checkSuspiciousDelegate(ADDR_A, false);
     expect(result.triggered).toBe(true);
     expect(result.affectedControllers).toEqual([ADDR_A]);
   });
 
-  it("does not trigger when the delegate has verifiable contract code", () => {
+  it("does not trigger when the delegate implements the interface", () => {
     const result = checkSuspiciousDelegate(ADDR_A, true);
     expect(result.triggered).toBe(false);
   });
@@ -141,7 +167,7 @@ describe("checkSuspiciousDelegate", () => {
     expect(result.affectedControllers).toBeUndefined();
   });
 
-  it("does not trigger for the zero address, even if 'hasCode' were somehow true", () => {
+  it("does not trigger for the zero address, even if 'implements interface' were somehow true", () => {
     const zeroAddress = "0x0000000000000000000000000000000000000000";
     const result = checkSuspiciousDelegate(zeroAddress, false);
     expect(result.triggered).toBe(false);
@@ -163,6 +189,23 @@ describe("checkNoControllers", () => {
 
   it("suggests no next step, since none is possible through the permission system", () => {
     const result = checkNoControllers([]);
+    expect(result.nextStep).toBeUndefined();
+  });
+});
+
+describe("checkNoKeyManager", () => {
+  it("triggers when the profile's owner isn't a genuine Key Manager, at critical severity", () => {
+    const result = checkNoKeyManager(false);
+    expect(result.triggered).toBe(true);
+    expect(result.severity).toBe("critical");
+  });
+
+  it("does not trigger when the profile's owner is a genuine Key Manager", () => {
+    expect(checkNoKeyManager(true).triggered).toBe(false);
+  });
+
+  it("suggests no next step, since none is possible through the permission system", () => {
+    const result = checkNoKeyManager(false);
     expect(result.nextStep).toBeUndefined();
   });
 });

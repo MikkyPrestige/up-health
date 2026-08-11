@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { ShieldCheck } from "lucide-react";
 import { formatTimestamp } from "@/lib/format/address";
 import { controllerKindLabel } from "@/lib/blockchain/controllerKind";
 import { CONTROLLER_KIND_ICONS } from "./controllerKindIcons";
@@ -43,6 +44,20 @@ export function ControllerDetailModal({
 
   const categories = getActiveCategories(controller.decodedPermissions);
   const KindIcon = CONTROLLER_KIND_ICONS[controller.controllerKind];
+
+  // AllowedCalls only matters if the controller holds a non-SUPER call-type
+  // permission - SUPER_ variants bypass this restriction entirely. Shown as
+  // its own section rather than split across categories, since it's one
+  // shared restriction list, not organized per capability.
+  const hasRestrictedCallPermission = Boolean(
+    controller.decodedPermissions.CALL ||
+      controller.decodedPermissions.STATICCALL ||
+      controller.decodedPermissions.DELEGATECALL ||
+      controller.decodedPermissions.TRANSFERVALUE
+  );
+  const hasRestrictedDataPermission = Boolean(
+    controller.decodedPermissions.SETDATA
+  );
 
   return (
     <div
@@ -121,6 +136,90 @@ export function ControllerDetailModal({
               })
             )}
           </div>
+
+          {(hasRestrictedCallPermission || hasRestrictedDataPermission) && (
+            <div className="mt-5 space-y-4 border-t border-hairline pt-4">
+              <div className="flex items-center gap-2 text-paper">
+                <ShieldCheck size={14} strokeWidth={2} className="text-vital" />
+                <p className="text-sm font-semibold">Restrictions</p>
+              </div>
+
+              {hasRestrictedCallPermission && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-paper-dim">
+                    Allowed calls
+                  </p>
+                  {controller.restrictions.allowedCalls === null ||
+                  controller.restrictions.allowedCalls.length === 0 ? (
+                    <p className="mt-1.5 text-sm text-signal">
+                      No allowed calls configured - this controller cannot
+                      currently use this permission at all.
+                    </p>
+                  ) : (
+                    <ul className="mt-1.5 space-y-2">
+                      {controller.restrictions.allowedCalls.map(
+                        (entry, i) => (
+                          <li
+                            key={i}
+                            className="rounded border border-hairline px-2.5 py-1.5 text-xs text-paper-dim"
+                          >
+                            <span className="text-vital">
+                              {entry.callTypes.join(", ") || "No call type"}
+                            </span>{" "}
+                            on{" "}
+                            <span
+                              className="font-mono"
+                              title={
+                                entry.address !== "Any address"
+                                  ? entry.address
+                                  : undefined
+                              }
+                            >
+                              {entry.address === "Any address"
+                                ? "any address"
+                                : `${entry.address.slice(0, 6)}…${entry.address.slice(-4)}`}
+                            </span>
+                            {" · "}
+                            {entry.standard === "Any type"
+                              ? "any contract type"
+                              : entry.standard}
+                            {" · "}
+                            {entry.function === "Any function"
+                              ? "any function"
+                              : `function ${entry.function}`}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {hasRestrictedDataPermission && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-paper-dim">
+                    Allowed data keys
+                  </p>
+                  {controller.restrictions.allowedDataKeyCount === null ||
+                  controller.restrictions.allowedDataKeyCount === 0 ? (
+                    <p className="mt-1.5 text-sm text-signal">
+                      No allowed data keys configured - this controller
+                      cannot currently use this permission at all.
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-sm text-paper-dim">
+                      Restricted to {controller.restrictions.allowedDataKeyCount}{" "}
+                      specific data{" "}
+                      {controller.restrictions.allowedDataKeyCount === 1
+                        ? "key"
+                        : "keys"}
+                      .
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {showStaleness && (
             <p className="mt-5 border-t border-hairline pt-3 font-mono text-xs text-paper-dim/70">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Radio } from "lucide-react";
 import { VitalsRule } from "./VitalsRule";
 import { ControllerRow } from "./ControllerRow";
 import { FindingsPanel } from "./FindingsPanel";
@@ -84,6 +85,19 @@ export function ProfileReportView({
         </div>
 
         <p className="mt-6 text-lg text-paper">{report.summary}</p>
+
+        {/* Public fact (Proposal 4.2): whether automatic reaction code is
+            configured, shown to everyone regardless of ownership. This is
+            deliberately just the fact - whether it's flagged as suspicious
+            is owner-only info surfaced separately in Findings below. */}
+        <p className="mt-3 flex items-center gap-2 font-mono text-xs text-paper-dim">
+          <Radio size={13} strokeWidth={2} />
+          {report.delegateAddress
+            ? `Automatic reaction code configured · ${truncateAddress(
+                report.delegateAddress
+              )}`
+            : "No automatic reaction code configured"}
+        </p>
 
         <VitalsRule className="mt-6" />
 
