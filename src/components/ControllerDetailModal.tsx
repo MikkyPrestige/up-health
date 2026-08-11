@@ -151,7 +151,7 @@ export function ControllerDetailModal({
                   </p>
                   {controller.restrictions.allowedCalls === null ||
                   controller.restrictions.allowedCalls.length === 0 ? (
-                    <p className="mt-1.5 text-sm text-signal">
+                    <p className="mt-1.5 text-sm text-paper-dim">
                       No allowed calls configured - this controller cannot
                       currently use this permission at all.
                     </p>
@@ -202,7 +202,7 @@ export function ControllerDetailModal({
                   </p>
                   {controller.restrictions.allowedDataKeyCount === null ||
                   controller.restrictions.allowedDataKeyCount === 0 ? (
-                    <p className="mt-1.5 text-sm text-signal">
+                    <p className="mt-1.5 text-sm text-paper-dim">
                       No allowed data keys configured - this controller
                       cannot currently use this permission at all.
                     </p>
