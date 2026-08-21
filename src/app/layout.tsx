@@ -11,9 +11,24 @@ import { NetworkFooter } from "@/components/NetworkFooter";
 import { Web3Providers } from "@/components/Web3Providers";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://up-health.vercel.app"),
   title: "UP Health",
   description:
     "A read-only diagnostic tool for LUKSO Universal Profile security & configuration.",
+  openGraph: {
+    title: "UP Health",
+    description:
+      "See exactly who can do what to your Universal Profile, and whether anything's worth a closer look.",
+    url: "https://up-health.vercel.app",
+    siteName: "UP Health",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "UP Health",
+    description:
+      "See exactly who can do what to your Universal Profile, and whether anything's worth a closer look.",
+  },
 };
 
 export default function RootLayout({
