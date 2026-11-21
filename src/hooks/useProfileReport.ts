@@ -27,10 +27,15 @@ import {
   checkSuspiciousDelegate,
   checkNoControllers,
   checkNoKeyManager,
+  checkGoverningOnlyController,
+  checkIncidentLinkedController,
+  type IncidentHit,
   type RiskFlagResult,
 } from "@/lib/risk/riskFlags";
+import { INCIDENT_ADDRESSES } from "@/lib/risk/knownIncidents";
 import { generateSummary } from "@/lib/risk/summary";
 import { isVerifiedOwner } from "@/lib/wallet/identityMatch";
+import { isNetworkError } from "@/lib/blockchain/errorKind";
 
 export interface ControllerReportRow extends ControllerBreakdown {
   isContract: boolean; // public (Proposal 6.4)
@@ -57,6 +62,7 @@ export type ProfileReportStatus =
   | { state: "invalid_format" }
   | { state: "not_found"; reason: "no_code" | "unrecognized_contract" }
   | { state: "network_error"; message: string }
+  | { state: "data_error"; message: string }
   | { state: "found"; report: ProfileReport };
 
 type SettledResult = { address: string; status: ProfileReportStatus };
@@ -172,12 +178,35 @@ export function useProfileReport(
           lastActivity: lastActivities[i],
         }));
 
+        // Read the incident addresses' permission keys directly: the
+        // attacker key may be absent from AddressPermissions[].
+        const incidentBreakdown = await getControllerPermissions(
+          address,
+          INCIDENT_ADDRESSES.map((entry) => entry.address)
+        );
+        if (cancelled) return;
+        const listed = new Set(
+          lookup.controllers.map((controller) => controller.toLowerCase())
+        );
+        const incidentHits: IncidentHit[] = INCIDENT_ADDRESSES.flatMap(
+          (entry, i) => {
+            const hasPermissions = Object.values(
+              incidentBreakdown[i].decodedPermissions
+            ).some(Boolean);
+            return hasPermissions || listed.has(entry.address)
+              ? [{ ...entry, hasPermissions }]
+              : [];
+          }
+        );
+
         flags = [
           checkConcentratedPower(breakdown),
           checkNoRecoveryPath(breakdown),
           checkSuspiciousDelegate(delegateAddress, delegateHasInterface),
           checkNoControllers(breakdown),
           checkNoKeyManager(hasKeyManager),
+          checkGoverningOnlyController(breakdown),
+          checkIncidentLinkedController(incidentHits),
         ];
       }
 
@@ -205,11 +234,12 @@ export function useProfileReport(
 
     run(viewedAddress).catch((err) => {
       if (!cancelled) {
+        const message = err instanceof Error ? err.message : "Unknown error";
         setResult({
           address: viewedAddress,
           status: {
-            state: "network_error",
-            message: err instanceof Error ? err.message : "Unknown error",
+            state: isNetworkError(err) ? "network_error" : "data_error",
+            message,
           },
         });
       }

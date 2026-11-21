@@ -6,21 +6,27 @@ export interface RiskFlagResult {
     | "no_recovery_path"
     | "suspicious_delegate"
     | "no_controllers"
-    | "no_key_manager";
+    | "no_key_manager"
+    | "governing_only_controller"
+    | "incident_linked_controller";
   triggered: boolean;
   // "critical" is reserved for a fundamentally different category than the
-  // others: not "this is risky," but "this has already happened and can't
-  // be undone through the profile's own permission system." no_controllers
-  // and no_key_manager use it today.
+  // others: not "this is risky," but "this has already happened." no_controllers
+  // and no_key_manager can't be undone through the profile's own permission
+  // system; incident_linked_controller uses it only when the attacker's key
+  // itself is present, which is removable but means the compromise occurred.
   severity: "warning" | "critical";
   title: string;
   explanation: string;
   nextStep?: string;
   nextStepUrl?: string;
+  nextStepLabel?: string; // defaults to "Open permission manager" in the UI
   affectedControllers?: `0x${string}`[];
 }
 
 const PERMISSION_MANAGER_URL = "https://permissioncontrol.app";
+// The tool LUKSO named in its incident instructions for removing controllers.
+const UP_AUTHORIZE_URL = "https://authorize.universalprofile.cloud/authorize";
 
 // Permissions that grant governing power over the profile's own access list.
 const GOVERNING_PERMISSIONS = ["ADDCONTROLLER", "EDITPERMISSIONS"];
@@ -198,5 +204,114 @@ export function checkNoKeyManager(hasKeyManager: boolean): RiskFlagResult {
       "AddressPermissions[] aren't actually being enforced - whatever " +
       "currently owns this profile can act on it directly, regardless of " +
       "what the permission data says.",
+  };
+}
+
+// Flag 6: a controller holds governing power (ADDCONTROLLER/EDITPERMISSIONS)
+// without broad execution power. Flag 1 already covers the combination, so
+// those controllers are excluded here. Alone this is LUKSO's recovery
+// pattern, but the Nov 2026 email-recovery incident showed a lone
+// ADDCONTROLLER controller is enough to take a profile: it can add a key
+// with any permissions. So it's surfaced as something to recognize, not as
+// a fault.
+export function checkGoverningOnlyController(
+  controllers: ControllerBreakdown[]
+): RiskFlagResult {
+  const affected = controllers.filter((controller) => {
+    const hasGoverningPower = GOVERNING_PERMISSIONS.some(
+      (permission) => controller.decodedPermissions[permission]
+    );
+    const hasBroadPower = BROAD_EXECUTION_OR_TRANSFER_PERMISSIONS.some(
+      (permission) => controller.decodedPermissions[permission]
+    );
+    return hasGoverningPower && !hasBroadPower;
+  });
+
+  return {
+    id: "governing_only_controller",
+    triggered: affected.length > 0,
+    severity: "warning",
+    title: "A controller can add new controllers",
+    explanation:
+      "This controller can't move funds itself, but it can add a new " +
+      "controller with any permissions, which amounts to the same thing. " +
+      "That's a normal setup for a recovery controller, so this is worth " +
+      "a check rather than a fix: make sure you recognize it and trust " +
+      "whoever holds its key.",
+    nextStep:
+      "If you recognize this controller and trust it, no action is needed. " +
+      "If you don't, remove it entirely.",
+    nextStepUrl: PERMISSION_MANAGER_URL,
+    affectedControllers: affected.map((controller) => controller.address),
+  };
+}
+
+export interface IncidentHit {
+  address: `0x${string}`;
+  label: string;
+  role: "attacker_key" | "recovery_profile";
+  // True when the address still holds any permission on this profile. False
+  // means it's only left over in the controller list (e.g. its permissions
+  // were already cleared but the slot was never removed).
+  hasPermissions: boolean;
+}
+
+// The UP Authorize page defaults to a "Standard Wallet" preset that includes
+// super permissions, so the safe action there is easy to get backwards.
+const AUTHORIZE_PAGE_WARNING =
+  "On that page use only the red 'Remove Controller Key' button. The " +
+  "'Authorize' button grants permissions, which is the opposite of what you want.";
+
+// Flag 7: the profile holds a permission entry (or lists a controller) for
+// an address LUKSO named in the Nov 2026 email-recovery incident. Takes
+// hits found by reading those addresses' permission keys directly, because
+// the post-mortem says the attacker key may not appear in the controller
+// list. A hit that still holds permissions is the live risk; a hit with none
+// is leftover clutter, and says so rather than claiming it can act.
+export function checkIncidentLinkedController(
+  hits: IncidentHit[]
+): RiskFlagResult {
+  const triggered = hits.length > 0;
+  const active = hits.filter((hit) => hit.hasPermissions);
+  const attackerActive = active.some((hit) => hit.role === "attacker_key");
+  const anyActive = active.length > 0;
+
+  const title = attackerActive
+    ? "The attacker key from LUKSO's November 2026 incident is on this profile"
+    : anyActive
+      ? "A recovery controller from LUKSO's November 2026 incident is on this profile"
+      : "A controller from LUKSO's November 2026 incident is still listed on this profile";
+
+  const explanation = attackerActive
+    ? "An address LUKSO identified as the attacker's key still has access " +
+      "to this profile. Removing its permissions isn't enough; the key " +
+      "should be removed completely. Any recovery-up controller listed " +
+      "below should go too."
+    : anyActive
+      ? "This profile still has a controller from the email-recovery service " +
+        "LUKSO has switched off, and it still holds permissions. In the " +
+        "incident, controllers like this were used to add the attacker's key. " +
+        "Importing a profile or adding a device can bring it back, so check " +
+        "again afterwards."
+      : "It holds no permissions, so it can't act on this profile right now. " +
+        "But it's still in the controller list, and importing a profile or " +
+        "adding a device can register its permissions again. Removing it " +
+        "completely clears that.";
+
+  return {
+    id: "incident_linked_controller",
+    triggered,
+    severity: attackerActive ? "critical" : "warning",
+    title,
+    explanation,
+    nextStep: anyActive
+      ? "Remove the listed controller entirely, make a file backup, and " +
+        "follow only LUKSO's official channels. LUKSO will never ask for " +
+        "your recovery phrase. " +
+        AUTHORIZE_PAGE_WARNING
+      : "Remove it entirely so it can't come back. " + AUTHORIZE_PAGE_WARNING,
+    nextStepUrl: UP_AUTHORIZE_URL,
+    nextStepLabel: "Open UP Authorize",
+    affectedControllers: hits.map((hit) => hit.address),
   };
 }

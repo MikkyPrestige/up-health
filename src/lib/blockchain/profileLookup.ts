@@ -43,8 +43,14 @@ export async function getRawControllerAddresses(
 
   try {
     const result = await erc725.getData("AddressPermissions[]");
+    // erc725.js can hand back blank or malformed slots in the array (for
+    // example after a controller was removed). Passing one onward makes the
+    // permission read throw, so only real addresses are kept.
     const controllers = Array.isArray(result.value)
-      ? (result.value as `0x${string}`[])
+      ? (result.value as unknown[]).filter(
+          (entry): entry is `0x${string}` =>
+            typeof entry === "string" && isAddress(entry)
+        )
       : [];
     return { status: "found", controllers };
   } catch {

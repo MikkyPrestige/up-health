@@ -5,7 +5,10 @@ import {
   checkSuspiciousDelegate,
   checkNoControllers,
   checkNoKeyManager,
+  checkGoverningOnlyController,
+  checkIncidentLinkedController,
 } from "./riskFlags";
+import { INCIDENT_ADDRESSES, findIncidentAddress } from "./knownIncidents";
 import type { ControllerBreakdown } from "../blockchain/controllerPermissions";
 
 // Builds a synthetic controller with the given permissions set to true.
@@ -207,5 +210,105 @@ describe("checkNoKeyManager", () => {
   it("suggests no next step, since none is possible through the permission system", () => {
     const result = checkNoKeyManager(false);
     expect(result.nextStep).toBeUndefined();
+  });
+});
+
+describe("checkGoverningOnlyController", () => {
+  it("triggers for ADDCONTROLLER with no broad power (the incident's recovery-up shape)", () => {
+    const result = checkGoverningOnlyController([
+      makeController(ADDR_A, ["ADDCONTROLLER"]),
+    ]);
+    expect(result.triggered).toBe(true);
+    expect(result.affectedControllers).toEqual([ADDR_A]);
+  });
+
+  it("triggers for EDITPERMISSIONS alone", () => {
+    expect(
+      checkGoverningOnlyController([makeController(ADDR_A, ["EDITPERMISSIONS"])])
+        .triggered
+    ).toBe(true);
+  });
+
+  it("does not trigger when broad power is also held (concentrated_power covers that)", () => {
+    const result = checkGoverningOnlyController([
+      makeController(ADDR_A, ["ADDCONTROLLER", "TRANSFERVALUE"]),
+    ]);
+    expect(result.triggered).toBe(false);
+  });
+
+  it("does not trigger without governing power", () => {
+    expect(
+      checkGoverningOnlyController([makeController(ADDR_A, ["CALL", "SETDATA"])])
+        .triggered
+    ).toBe(false);
+  });
+});
+
+describe("checkIncidentLinkedController", () => {
+  const attacker = { ...INCIDENT_ADDRESSES[0], hasPermissions: true };
+  const recovery = { ...INCIDENT_ADDRESSES[1], hasPermissions: true };
+  const recoveryEmpty = { ...INCIDENT_ADDRESSES[1], hasPermissions: false };
+
+  it("does not trigger with no hits", () => {
+    expect(checkIncidentLinkedController([]).triggered).toBe(false);
+  });
+
+  it("is a warning for a recovery-up controller that still holds permissions", () => {
+    const result = checkIncidentLinkedController([recovery]);
+    expect(result.triggered).toBe(true);
+    expect(result.severity).toBe("warning");
+    expect(result.explanation).toContain("still holds permissions");
+    expect(result.affectedControllers).toEqual([recovery.address]);
+  });
+
+  it("is critical when the attacker key still holds permissions", () => {
+    const result = checkIncidentLinkedController([attacker, recovery]);
+    expect(result.severity).toBe("critical");
+  });
+
+  it("says a listed-but-empty controller can't act, and stays a warning", () => {
+    const result = checkIncidentLinkedController([recoveryEmpty]);
+    expect(result.triggered).toBe(true);
+    expect(result.severity).toBe("warning");
+    expect(result.title).toContain("still listed");
+    expect(result.explanation).toContain("holds no permissions");
+    expect(result.explanation).not.toContain("still holds permissions");
+  });
+
+  it("does not escalate to critical for an attacker key with no permissions left", () => {
+    const attackerEmpty = { ...INCIDENT_ADDRESSES[0], hasPermissions: false };
+    expect(checkIncidentLinkedController([attackerEmpty]).severity).toBe(
+      "warning"
+    );
+  });
+
+  it("uses the active wording when active and empty hits are mixed", () => {
+    const result = checkIncidentLinkedController([recoveryEmpty, recovery]);
+    expect(result.title).toContain("is on this profile");
+    expect(result.affectedControllers).toHaveLength(2);
+  });
+
+  it("warns against the Authorize button on the UP Authorize page", () => {
+    const result = checkIncidentLinkedController([recoveryEmpty]);
+    expect(result.nextStep).toContain("Remove Controller Key");
+    expect(result.nextStep).toContain("grants permissions");
+  });
+});
+
+describe("knownIncidents", () => {
+  it("lists the attacker key plus ten recovery profiles, all lowercase and unique", () => {
+    expect(INCIDENT_ADDRESSES).toHaveLength(11);
+    expect(INCIDENT_ADDRESSES.filter((e) => e.role === "attacker_key")).toHaveLength(1);
+    expect(new Set(INCIDENT_ADDRESSES.map((e) => e.address)).size).toBe(11);
+    for (const entry of INCIDENT_ADDRESSES) {
+      expect(entry.address).toMatch(/^0x[0-9a-f]{40}$/);
+    }
+  });
+
+  it("matches regardless of address casing", () => {
+    expect(
+      findIncidentAddress("0xA2F8FD85366D1B4A3B13C33A48CD959F6D1BA3A7")?.role
+    ).toBe("attacker_key");
+    expect(findIncidentAddress(ADDR_A)).toBeUndefined();
   });
 });

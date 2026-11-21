@@ -4,7 +4,7 @@
 
 UP Health is a read-only diagnostic tool for [LUKSO](https://lukso.network) Universal Profiles. It reads a profile's on-chain permission data (LSP6 Key Manager) and translates it into a plain-language breakdown of who controls the profile, what each controller can actually do, and whether anything about the current setup looks risky, stale, or misconfigured.
 
-It doesn't manage, edit, or fix anything — it diagnoses. For remediation, it links out to the existing [LSP6 permission manager](https://permissioncontrol.app) already available in the LUKSO ecosystem.
+It doesn't manage, edit, or fix anything — it diagnoses. For remediation, it links out to the existing [LSP6 permission manager](https://permissioncontrol.app) already available in the LUKSO ecosystem, and to [UP Authorize](https://authorize.universalprofile.cloud/authorize) for removing controllers tied to LUKSO's November 2026 recovery incident.
 
 🔗 **Live:** [up-health.vercel.app](https://up-health.vercel.app)
 🧩 Also works as a **Mini-App** on [Universal Everything Grid](https://universaleverything.io) — just add `up-health.vercel.app` to your Grid.
@@ -20,6 +20,8 @@ It doesn't manage, edit, or fix anything — it diagnoses. For remediation, it l
   - A configured automatic-reaction contract (Universal Receiver Delegate) doesn't implement the interface it's supposed to
   - The profile has zero controllers
   - The profile's owner isn't actually a genuine LSP6 Key Manager — meaning none of its permission data is actually being enforced
+  - A controller can add new controllers (`ADDCONTROLLER` / `EDITPERMISSIONS`) without any power to move funds. This is a normal shape for a recovery controller, so it's a prompt to check you recognize and trust it, not a fault
+  - A controller from LUKSO's [November 2026 email-recovery incident](https://medium.com/lukso/post-mortem-security-incident-in-the-email-based-recovery-system-029f6f241e2b) is on the profile. UP Health checks the 11 addresses LUKSO published (the attacker key and ten `recovery-up` profiles) by reading their permission keys directly, since the attacker key can be missing from a profile's controller list. It separates a controller that still holds permissions from one that's only left in the list with none. It checks only those addresses and isn't a general safety check
 - **Restriction visibility** — surfaces when a "powerful" permission (like `CALL` or `SETDATA`) is actually inert because nothing is allow-listed for it
 - **Contract vs. wallet detection** for every controller, shown to everyone
 - **Last-activity / staleness** per controller, shown only to the verified owner

@@ -76,7 +76,7 @@ export function FindingsPanel({ flags }: FindingsPanelProps) {
                       rel="noopener noreferrer"
                       className="underline decoration-hairline underline-offset-4 hover:text-vital"
                     >
-                      Open permission manager ↗
+                      {flag.nextStepLabel ?? "Open permission manager"} ↗
                     </a>
                   )}
                 </p>

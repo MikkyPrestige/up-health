@@ -56,6 +56,9 @@ export function ProfileChecker() {
         {status.state === "network_error" && (
           <StatusMessage kind="network_error" detail={status.message} />
         )}
+        {status.state === "data_error" && (
+          <StatusMessage kind="data_error" detail={status.message} />
+        )}
         {status.state === "found" && (
           <ProfileReportView
             key={status.report.address}

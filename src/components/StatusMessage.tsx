@@ -1,5 +1,10 @@
 interface StatusMessageProps {
-  kind: "loading" | "invalid_format" | "not_found" | "network_error";
+  kind:
+    | "loading"
+    | "invalid_format"
+    | "not_found"
+    | "network_error"
+    | "data_error";
   reason?: "no_code" | "unrecognized_contract";
   detail?: string;
 }
@@ -19,6 +24,10 @@ const COPY: Record<
   network_error: {
     title: "Couldn't reach LUKSO Mainnet",
     body: "This looks like a connection problem, not a missing profile. Check your network and try again.",
+  },
+  data_error: {
+    title: "Couldn't read this profile's data",
+    body: "LUKSO Mainnet responded, but something in this profile's data couldn't be processed. This isn't a connection problem, so retrying is unlikely to help.",
   },
 };
 

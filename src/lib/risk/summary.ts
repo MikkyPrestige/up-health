@@ -8,6 +8,9 @@ const SHORT_LABELS: Record<RiskFlagResult["id"], string> = {
     "this profile's automatic reaction code doesn't implement the expected interface",
   no_controllers: "this profile has no controllers at all",
   no_key_manager: "this profile isn't actually controlled by a Key Manager",
+  governing_only_controller: "a controller can add new controllers",
+  incident_linked_controller:
+    "a controller linked to LUKSO's November 2026 recovery incident is present",
 };
 
 // Builds the single summary sentence shown at the top of results (Handbook

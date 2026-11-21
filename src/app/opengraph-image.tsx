@@ -4,10 +4,6 @@ export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Generated at request time via next/og rather than a static file, so it
-// stays a single source of truth with the app's actual design tokens
-// (ink/panel/vital) instead of a hand-exported image that can drift out of
-// sync with the real palette in globals.css.
 export default async function Image() {
   return new ImageResponse(
     (
