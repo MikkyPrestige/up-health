@@ -39,7 +39,11 @@ Looking up someone else's profile, connected or not, never surfaces risk framing
 
 ## Why it exists
 
-LSP6 permissions are stored on-chain as bitfields — technically precise, but unreadable to anyone who isn't deeply familiar with the standard. A permission *management* tool already exists in the LUKSO ecosystem, but nothing diagnosed the current state of a profile's permissions before changes are made. UP Health fills that gap.
+LSP6 permissions are stored on-chain as bitfields. Tools like [permissioncontrol.app](https://permissioncontrol.app) already show them in readable form and let you change them. What was missing is the step in between: reading a profile as a whole and saying what its setup adds up to.
+
+A list of controllers can each look reasonable and still add up to something risky. Several controllers that can each add controllers *and* spend funds are several separate ways to take a profile, and no single controller card shows that. LUKSO's November 2026 email-recovery incident worked through a controller that was allowed to add controllers. UP Health reads across the whole list and flags those combinations, along with missing recovery paths, a misconfigured receiver delegate, and controllers that have gone quiet.
+
+It's the diagnose step. Fixing things stays with the tools built for it.
 
 ## Tech stack
 
