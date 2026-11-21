@@ -4,6 +4,7 @@ import { truncateAddress, formatTimestamp } from "@/lib/format/address";
 import { controllerKindLabel } from "@/lib/blockchain/controllerKind";
 import { CONTROLLER_KIND_ICONS } from "./controllerKindIcons";
 import { getActiveCategories } from "@/lib/permissions/permissionCategories";
+import { describeControllerRole } from "@/lib/permissions/controllerRole";
 import type { ControllerReportRow } from "@/hooks/useProfileReport";
 
 interface ControllerRowProps {
@@ -28,6 +29,11 @@ export function ControllerRow({
   const visibleCategories = categories.slice(0, VISIBLE_CATEGORIES_LIMIT);
   const hiddenCount = Math.max(0, categories.length - VISIBLE_CATEGORIES_LIMIT);
   const KindIcon = CONTROLLER_KIND_ICONS[controller.controllerKind];
+  const role = describeControllerRole(
+    controller.decodedPermissions,
+    controller.controllerKind,
+    controller.restrictions
+  );
 
   return (
     <button
@@ -78,10 +84,10 @@ export function ControllerRow({
           {controllerKindLabel(controller.controllerKind)}
         </span>
 
-        <div className="mt-3.5 flex flex-1 flex-wrap content-start items-start gap-1.5">
-          {categories.length === 0 ? (
-            <span className="text-sm text-paper-dim">Holds no permissions.</span>
-          ) : (
+        <p className="mt-3 text-sm text-paper">{role.headline}</p>
+
+        <div className="mt-3 flex flex-1 flex-wrap content-start items-start gap-1.5">
+          {categories.length === 0 ? null : (
             <>
               {visibleCategories.map((category) => (
                 <CategoryBadge

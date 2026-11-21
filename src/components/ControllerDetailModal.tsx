@@ -7,6 +7,7 @@ import { controllerKindLabel } from "@/lib/blockchain/controllerKind";
 import { CONTROLLER_KIND_ICONS } from "./controllerKindIcons";
 import { CATEGORY_ICONS } from "./categoryIcons";
 import { getActiveCategories } from "@/lib/permissions/permissionCategories";
+import { describeControllerRole } from "@/lib/permissions/controllerRole";
 import { permissionLabel } from "@/lib/permissions/permissionLabels";
 import type { ControllerReportRow } from "@/hooks/useProfileReport";
 
@@ -44,6 +45,11 @@ export function ControllerDetailModal({
 
   const categories = getActiveCategories(controller.decodedPermissions);
   const KindIcon = CONTROLLER_KIND_ICONS[controller.controllerKind];
+  const role = describeControllerRole(
+    controller.decodedPermissions,
+    controller.controllerKind,
+    controller.restrictions
+  );
 
   // AllowedCalls only matters if the controller holds a non-SUPER call-type
   // permission - SUPER_ variants bypass this restriction entirely. Shown as
@@ -105,10 +111,15 @@ export function ControllerDetailModal({
             </button>
           </div>
 
+          <div className="mt-4">
+            <p className="text-sm font-semibold text-paper">{role.headline}</p>
+            {role.note && (
+              <p className="mt-1 text-sm text-paper-dim">{role.note}</p>
+            )}
+          </div>
+
           <div className="mt-5 space-y-4 border-t border-hairline pt-4">
-            {categories.length === 0 ? (
-              <p className="text-sm text-paper-dim">Holds no permissions.</p>
-            ) : (
+            {categories.length === 0 ? null : (
               categories.map((category) => {
                 const Icon = CATEGORY_ICONS[category.id];
                 return (
