@@ -15,6 +15,8 @@ const SHORT_LABELS: Record<RiskFlagResult["id"], string> = {
     "a controller from LUKSO's November 2026 incident is still listed",
 };
 
+const MAX_LISTED = 2;
+
 // Builds the single summary sentence shown at the top of results (Handbook
 // Step 3.7). Purely presentation - it just counts and phrases what Phase 3's
 // other functions already computed, in plain words a non-technical reader
@@ -51,10 +53,17 @@ export function generateSummary(
     return `${base}. Nothing stands out in the checks UP Health runs.`;
   }
 
-  const list = triggeredFlags.map((flag) => SHORT_LABELS[flag.id]).join("; ");
+  // Only the most serious few are spelled out: on a phone a sentence naming
+  // every finding runs for lines, and the cards below already hold them all.
+  const listed = triggeredFlags.slice(0, MAX_LISTED);
+  const list = listed.map((flag) => SHORT_LABELS[flag.id]).join("; ");
   const count =
     triggeredFlags.length === 1
-      ? "1 thing worth a look"
-      : `${triggeredFlags.length} things worth a look`;
-  return `${base}. ${count}: ${list}.`;
+      ? "1 thing needs your attention"
+      : `${triggeredFlags.length} things need your attention`;
+  const rest =
+    triggeredFlags.length > MAX_LISTED
+      ? " See the findings below for the rest."
+      : "";
+  return `${base}. ${count}: ${list}.${rest}`;
 }

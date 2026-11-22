@@ -39,7 +39,7 @@ export function ProfileReportView({
     <div className="hero-enter w-full">
       <div className="mx-auto max-w-2xl">
         {hasConnectedWallet && (
-          <div className="mb-4 flex items-center gap-3 text-sm">
+          <div className="mb-4 flex items-center gap-3 text-base sm:text-sm">
             <span
               className={report.isVerifiedOwner ? "text-vital" : "text-paper-dim"}
             >
@@ -69,7 +69,7 @@ export function ProfileReportView({
               className="h-12 w-12 rounded-full border border-hairline object-cover"
             />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-hairline bg-panel-raised font-mono text-sm text-paper-dim">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-hairline bg-panel-raised font-mono text-base sm:text-sm text-paper-dim">
               {(report.metadata.name ?? report.address).slice(0, 2)}
             </div>
           )}
@@ -77,7 +77,7 @@ export function ProfileReportView({
             <p className="font-sans text-lg font-semibold text-paper">
               {report.metadata.name ?? truncateAddress(report.address)}
             </p>
-            <p className="font-mono text-xs text-paper-dim">
+            <p className="font-mono text-sm sm:text-xs text-paper-dim">
               {report.kind === "vault" ? "Vault" : "Universal Profile"} ·{" "}
               {truncateAddress(report.address)}
             </p>
@@ -90,7 +90,7 @@ export function ProfileReportView({
             configured, shown to everyone regardless of ownership. This is
             deliberately just the fact - whether it's flagged as suspicious
             is owner-only info surfaced separately in Findings below. */}
-        <p className="mt-3 flex items-center gap-2 font-mono text-xs text-paper-dim">
+        <p className="mt-3 flex items-center gap-2 font-mono text-sm sm:text-xs text-paper-dim">
           <Radio size={13} strokeWidth={2} />
           {report.delegateAddress
             ? `Automatic reaction code configured · ${truncateAddress(
@@ -103,7 +103,7 @@ export function ProfileReportView({
 
         {report.isVerifiedOwner && (
           <div className="mt-6">
-            <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-paper-dim">
+            <h2 className="font-mono text-sm sm:text-xs uppercase tracking-[0.2em] text-paper-dim">
               Findings
             </h2>
             <div className="mt-3">
@@ -114,11 +114,11 @@ export function ProfileReportView({
       </div>
 
       <div className="mt-8">
-        <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-paper-dim">
+        <h2 className="font-mono text-sm sm:text-xs uppercase tracking-[0.2em] text-paper-dim">
           Controllers ({report.controllers.length})
         </h2>
         {report.controllers.length === 0 ? (
-          <p className="mt-3 text-sm text-paper-dim">
+          <p className="mt-3 text-base sm:text-sm text-paper-dim">
             {report.isVerifiedOwner
               ? "No controllers to show - see the finding above."
               : "No controllers found on this profile."}

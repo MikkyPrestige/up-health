@@ -20,11 +20,11 @@ export function FindingsPanel({ flags }: FindingsPanelProps) {
         <div className="px-5 py-4">
           <div className="flex items-center gap-3">
             <StatusDot tone="clear" />
-            <p className="text-sm font-semibold text-paper">
+            <p className="text-base sm:text-sm font-semibold text-paper">
               Nothing stands out
             </p>
           </div>
-          <p className="mt-1 text-sm text-paper-dim">
+          <p className="mt-1 text-base sm:text-sm text-paper-dim">
             None of the checks UP Health runs found anything to look at. That
             doesn&apos;t guarantee a profile is safe; it only covers what the
             checks look for.
@@ -52,31 +52,23 @@ export function FindingsPanel({ flags }: FindingsPanelProps) {
             <div className="px-5 py-4">
               <div className="flex items-center gap-3">
                 <StatusDot tone={isCritical ? "critical" : "flagged"} />
-                <p className="text-sm font-semibold text-paper">
+                <p className="text-base sm:text-sm font-semibold text-paper">
                   {flag.title}
                 </p>
               </div>
-              <p className="mt-3 text-sm text-paper-dim">
+              <p className="mt-3 text-base sm:text-sm text-paper-dim">
                 <span className="font-medium text-paper">Why it matters:</span>{" "}
                 {flag.explanation}
               </p>
-              {flag.whyKeep && (
-                <p className="mt-2 text-sm text-paper-dim">
-                  <span className="font-medium text-paper">
-                    Why you might keep it:
-                  </span>{" "}
-                  {flag.whyKeep}
-                </p>
-              )}
               {flag.affectedControllers &&
                 flag.affectedControllers.length > 0 && (
-                  <p className="mt-2 font-mono text-xs text-paper-dim/70">
+                  <p className="mt-2 font-mono text-sm sm:text-xs text-paper-dim/80">
                     Affects:{" "}
                     {flag.affectedControllers.map(truncateAddress).join(", ")}
                   </p>
                 )}
               {flag.nextStep && (
-                <p className="mt-2 text-sm text-paper">
+                <p className="mt-2 text-base sm:text-sm text-paper">
                   <span className="text-signal">What to do:</span>{" "}
                   {flag.nextStep}{" "}
                   {flag.nextStepUrl && (
@@ -91,13 +83,37 @@ export function FindingsPanel({ flags }: FindingsPanelProps) {
                   )}
                 </p>
               )}
-              {flag.whatCouldStop && (
-                <p className="mt-2 text-sm text-paper-dim">
-                  <span className="font-medium text-paper">
-                    What could stop working:
-                  </span>{" "}
-                  {flag.whatCouldStop}
-                </p>
+              {/* The trade-off half stays one tap away so several findings
+                  don't push the controller list off a phone screen. What to
+                  do stays visible because it can carry safety warnings. */}
+              {(flag.whyKeep || flag.whatCouldStop) && (
+                <details className="group mt-3 border-t border-hairline pt-1">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-base sm:text-sm text-vital [&::-webkit-details-marker]:hidden">
+                    <span
+                      aria-hidden="true"
+                      className="inline-block transition-transform group-open:rotate-90"
+                    >
+                      ›
+                    </span>
+                    More detail
+                  </summary>
+                  {flag.whyKeep && (
+                    <p className="mt-1 text-base sm:text-sm text-paper-dim">
+                      <span className="font-medium text-paper">
+                        Why you might keep it:
+                      </span>{" "}
+                      {flag.whyKeep}
+                    </p>
+                  )}
+                  {flag.whatCouldStop && (
+                    <p className="mt-2 text-base sm:text-sm text-paper-dim">
+                      <span className="font-medium text-paper">
+                        What could stop working:
+                      </span>{" "}
+                      {flag.whatCouldStop}
+                    </p>
+                  )}
+                </details>
               )}
             </div>
           </div>

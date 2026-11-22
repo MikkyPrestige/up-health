@@ -15,7 +15,7 @@ export function CategoryBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 font-mono text-xs ${
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 font-mono text-sm sm:text-xs ${
         tone === "accent"
           ? "border-vital/30 bg-vital/10 text-vital"
           : "border-hairline bg-panel-raised text-paper-dim"

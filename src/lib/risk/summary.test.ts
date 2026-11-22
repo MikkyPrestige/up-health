@@ -24,7 +24,7 @@ describe("generateSummary", () => {
     const summary = generateSummary(1, triggeredFlags, false);
     expect(summary).not.toContain("flag");
     expect(summary).not.toContain("Nothing stands out");
-    expect(summary).not.toContain("worth a look");
+    expect(summary).not.toMatch(/\d things? needs? your attention/);
     expect(summary).not.toContain("backup");
     expect(summary).toContain("connect the wallet that owns this profile");
   });
@@ -58,7 +58,7 @@ describe("generateSummary", () => {
     const flags = [makeFlag("no_recovery_path", true)];
     const summary = generateSummary(1, flags, true);
     expect(summary).toBe(
-      "1 controller found. 1 thing worth a look: there's only one controller, so no backup if you lose it."
+      "1 controller found. 1 thing needs your attention: there's only one controller, so no backup if you lose it."
     );
   });
 
@@ -68,7 +68,23 @@ describe("generateSummary", () => {
       makeFlag("suspicious_delegate", true),
     ];
     const summary = generateSummary(4, flags, true);
-    expect(summary).toContain("2 things worth a look:");
+    expect(summary).toContain("2 things need your attention:");
+    expect(summary).not.toContain("for the rest");
+  });
+
+  it("names only the two most serious findings and points to the cards for the rest", () => {
+    const flags = [
+      makeFlag("concentrated_power", true),
+      makeFlag("suspicious_delegate", true),
+      makeFlag("no_recovery_path", true),
+      { ...makeFlag("no_key_manager", true), severity: "critical" as const },
+    ];
+    const summary = generateSummary(4, flags, true);
+    expect(summary).toContain("4 things need your attention:");
+    expect(summary).toContain("Key Manager");
+    expect(summary).toContain("add other controllers and send funds");
+    expect(summary).not.toContain("only one controller");
+    expect(summary).toContain("See the findings below for the rest.");
   });
 
   it("lists critical findings before warnings", () => {

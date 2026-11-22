@@ -57,11 +57,11 @@ export function ControllerRow({
           <div className="min-w-0">
             {controller.controllerName ? (
               <>
-                <p className="truncate font-sans text-base font-semibold text-paper">
+                <p className="truncate font-sans text-lg sm:text-base font-semibold text-paper">
                   {controller.controllerName}
                 </p>
                 <p
-                  className="truncate font-mono text-xs text-paper-dim"
+                  className="truncate font-mono text-sm sm:text-xs text-paper-dim"
                   title={controller.address}
                 >
                   {truncateAddress(controller.address)}
@@ -69,7 +69,7 @@ export function ControllerRow({
               </>
             ) : (
               <p
-                className="font-mono text-sm text-paper"
+                className="font-mono text-base sm:text-sm text-paper"
                 title={controller.address}
               >
                 {truncateAddress(controller.address)}
@@ -79,12 +79,12 @@ export function ControllerRow({
           <StatusDot tone={isFlagged ? "flagged" : "clear"} />
         </div>
 
-        <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded border border-hairline px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide text-paper-dim">
+        <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded border border-hairline px-2 py-0.5 font-mono text-xs sm:text-[11px] uppercase tracking-wide text-paper-dim">
           <KindIcon size={11} strokeWidth={2} />
           {controllerKindLabel(controller.controllerKind)}
         </span>
 
-        <p className="mt-3 text-sm text-paper">{role.headline}</p>
+        <p className="mt-3 text-base sm:text-sm text-paper">{role.headline}</p>
 
         <div className="mt-3 flex flex-1 flex-wrap content-start items-start gap-1.5">
           {categories.length === 0 ? null : (
@@ -97,7 +97,7 @@ export function ControllerRow({
                 />
               ))}
               {hiddenCount > 0 && (
-                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-vital/30 bg-vital/10 px-2.5 py-1 font-mono text-xs text-vital">
+                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-vital/30 bg-vital/10 px-2.5 py-1 font-mono text-sm sm:text-xs text-vital">
                   +{hiddenCount} more
                 </span>
               )}
@@ -109,17 +109,17 @@ export function ControllerRow({
           {showStaleness && (
             <div className="mt-3.5 border-t border-hairline pt-2.5">
               {controller.lastActivity ? (
-                <p className="font-mono text-xs text-paper-dim/70">
+                <p className="font-mono text-sm sm:text-xs text-paper-dim/80">
                   Last active {formatTimestamp(controller.lastActivity)}
                 </p>
               ) : (
-                <p className="font-mono text-xs text-paper-dim/50">
+                <p className="font-mono text-sm sm:text-xs text-paper-dim/70">
                   No on-chain activity found
                 </p>
               )}
             </div>
           )}
-          <p className="mt-3 font-mono text-[11px] uppercase tracking-wide text-paper-dim/50 transition group-hover:text-vital/70">
+          <p className="mt-3 font-mono text-xs sm:text-[11px] uppercase tracking-wide text-paper-dim/70 transition group-hover:text-vital/70">
             View full details →
           </p>
         </div>
