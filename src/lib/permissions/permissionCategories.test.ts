@@ -22,6 +22,14 @@ describe("PERMISSION_CATEGORIES", () => {
   });
 });
 
+describe("ifRemoved", () => {
+  it("gives every category a plain-language line", () => {
+    for (const category of PERMISSION_CATEGORIES) {
+      expect(category.ifRemoved.length).toBeGreaterThan(20);
+    }
+  });
+});
+
 describe("getActiveCategories", () => {
   it("returns only categories the controller actually has permissions in", () => {
     const active = getActiveCategories({

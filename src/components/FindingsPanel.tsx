@@ -21,12 +21,13 @@ export function FindingsPanel({ flags }: FindingsPanelProps) {
           <div className="flex items-center gap-3">
             <StatusDot tone="clear" />
             <p className="text-sm font-semibold text-paper">
-              No risk flags found
+              Nothing stands out
             </p>
           </div>
           <p className="mt-1 text-sm text-paper-dim">
-            This profile&apos;s controller setup doesn&apos;t match any of the
-            patterns this tool checks for.
+            None of the checks UP Health runs found anything to look at. That
+            doesn&apos;t guarantee a profile is safe; it only covers what the
+            checks look for.
           </p>
         </div>
       </div>
@@ -55,9 +56,18 @@ export function FindingsPanel({ flags }: FindingsPanelProps) {
                   {flag.title}
                 </p>
               </div>
-              <p className="mt-2 text-sm text-paper-dim">
+              <p className="mt-3 text-sm text-paper-dim">
+                <span className="font-medium text-paper">Why it matters:</span>{" "}
                 {flag.explanation}
               </p>
+              {flag.whyKeep && (
+                <p className="mt-2 text-sm text-paper-dim">
+                  <span className="font-medium text-paper">
+                    Why you might keep it:
+                  </span>{" "}
+                  {flag.whyKeep}
+                </p>
+              )}
               {flag.affectedControllers &&
                 flag.affectedControllers.length > 0 && (
                   <p className="mt-2 font-mono text-xs text-paper-dim/70">
@@ -66,8 +76,8 @@ export function FindingsPanel({ flags }: FindingsPanelProps) {
                   </p>
                 )}
               {flag.nextStep && (
-                <p className="mt-3 text-sm text-paper">
-                  <span className="text-signal">Next step:</span>{" "}
+                <p className="mt-2 text-sm text-paper">
+                  <span className="text-signal">What to do:</span>{" "}
                   {flag.nextStep}{" "}
                   {flag.nextStepUrl && (
                     <a
@@ -79,6 +89,14 @@ export function FindingsPanel({ flags }: FindingsPanelProps) {
                       {flag.nextStepLabel ?? "Open permission manager"} ↗
                     </a>
                   )}
+                </p>
+              )}
+              {flag.whatCouldStop && (
+                <p className="mt-2 text-sm text-paper-dim">
+                  <span className="font-medium text-paper">
+                    What could stop working:
+                  </span>{" "}
+                  {flag.whatCouldStop}
                 </p>
               )}
             </div>

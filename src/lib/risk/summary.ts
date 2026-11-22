@@ -2,49 +2,59 @@ import type { RiskFlagResult } from "./riskFlags";
 
 const SHORT_LABELS: Record<RiskFlagResult["id"], string> = {
   concentrated_power:
-    "a controller can both govern permissions and move funds or make calls",
-  no_recovery_path: "only one controller exists, with no recovery path",
+    "some controllers can both add other controllers and send funds",
+  no_recovery_path:
+    "there's only one controller, so no backup if you lose it",
   suspicious_delegate:
-    "this profile's automatic reaction code doesn't implement the expected interface",
-  no_controllers: "this profile has no controllers at all",
-  no_key_manager: "this profile isn't actually controlled by a Key Manager",
-  governing_only_controller: "a controller can add new controllers",
+    "the automatic helper on this profile isn't set up the way it should be",
+  no_controllers: "this profile has no controllers, so nobody can use it",
+  no_key_manager:
+    "this profile isn't protected by a Key Manager, so its permissions aren't being enforced",
+  governing_only_controller: "a controller can add other controllers",
   incident_linked_controller:
-    "a controller linked to LUKSO's November 2026 recovery incident is present",
+    "a controller from LUKSO's November 2026 incident is still listed",
 };
 
 // Builds the single summary sentence shown at the top of results (Handbook
 // Step 3.7). Purely presentation - it just counts and phrases what Phase 3's
-// other functions already computed.
+// other functions already computed, in plain words a non-technical reader
+// can act on.
 //
 // isVerifiedOwner must be passed explicitly and honestly: for anyone other
-// than the verified owner, this never mentions flags at all - not even to
-// say "no flags found" - since that would misleadingly imply we checked and
-// found the profile clean, when we simply didn't check (Proposal Section 4.2).
+// than the verified owner, this never mentions flags or findings at all -
+// not even to say nothing was found - since that would misleadingly imply we
+// checked and found the profile clean, when we simply didn't check (Proposal
+// Section 4.2). It only tells them what to do to see the findings.
 export function generateSummary(
   controllerCount: number,
   flags: RiskFlagResult[],
   isVerifiedOwner: boolean
 ): string {
   const controllerWord = controllerCount === 1 ? "controller" : "controllers";
-  const base = `${controllerCount} ${controllerWord} found.`;
+  const base = `${controllerCount} ${controllerWord} found`;
 
   if (!isVerifiedOwner) {
-    return `${base} Connect the wallet that owns this profile to see its full risk breakdown.`;
+    const listed =
+      controllerCount > 0 ? ", listed below with what each can do" : "";
+    return `${base}${listed}. To see what needs your attention, connect the wallet that owns this profile.`;
   }
 
-  const triggeredFlags = flags.filter((flag) => flag.triggered);
+  // Serious items first; Array.prototype.sort is stable, so the original
+  // order is kept within each severity.
+  const triggeredFlags = flags
+    .filter((flag) => flag.triggered)
+    .sort((a, b) =>
+      a.severity === b.severity ? 0 : a.severity === "critical" ? -1 : 1
+    );
 
   if (triggeredFlags.length === 0) {
-    return `${base} No flags found.`;
+    return `${base}. Nothing stands out in the checks UP Health runs.`;
   }
 
-  if (triggeredFlags.length === 1) {
-    return `${base} 1 flag: ${SHORT_LABELS[triggeredFlags[0].id]}.`;
-  }
-
-  const list = triggeredFlags
-    .map((flag) => SHORT_LABELS[flag.id])
-    .join("; ");
-  return `${base} ${triggeredFlags.length} flags: ${list}.`;
+  const list = triggeredFlags.map((flag) => SHORT_LABELS[flag.id]).join("; ");
+  const count =
+    triggeredFlags.length === 1
+      ? "1 thing worth a look"
+      : `${triggeredFlags.length} things worth a look`;
+  return `${base}. ${count}: ${list}.`;
 }

@@ -1,6 +1,6 @@
 # UP Health
 
-**Paste a Universal Profile address. Find out exactly who can do what to it, and whether anything looks risky.**
+**Paste a Universal Profile address. See which keys, devices and apps can act on it, what each is allowed to do, and, if it's yours, what needs your attention.**
 
 UP Health is a read-only diagnostic tool for [LUKSO](https://lukso.network) Universal Profiles. It reads a profile's on-chain permission data (LSP6 Key Manager) and translates it into a plain-language breakdown of who controls the profile, what each controller can actually do, and whether anything about the current setup looks risky, stale, or misconfigured.
 

@@ -39,8 +39,9 @@ export function AddressForm({
         </h1>
       </div>
       <p className="mt-5 max-w-lg text-balance text-paper-dim">
-        Paste a Universal Profile address. See exactly who can do what to it,
-        and whether anything is worth a closer look.
+        Paste a Universal Profile address. See which keys, devices and apps can
+        act on it, what each is allowed to do, and, if it&apos;s yours, what
+        needs your attention.
       </p>
 
       <form

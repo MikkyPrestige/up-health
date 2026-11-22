@@ -142,9 +142,21 @@ export function ControllerDetailModal({
                         </li>
                       ))}
                     </ul>
+                    <p className="mt-2 pl-[22px] text-xs text-paper-dim">
+                      <span className="font-medium text-paper">
+                        If you turn this off:
+                      </span>{" "}
+                      {category.ifRemoved}
+                    </p>
                   </div>
                 );
               })
+            )}
+            {categories.length > 0 && (
+              <p className="text-xs text-paper-dim/70">
+                These describe what generally happens. UP Health can&apos;t see
+                which apps rely on this controller.
+              </p>
             )}
           </div>
 

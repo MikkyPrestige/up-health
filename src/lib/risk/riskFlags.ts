@@ -17,8 +17,14 @@ export interface RiskFlagResult {
   // itself is present, which is removable but means the compromise occurred.
   severity: "warning" | "critical";
   title: string;
+  // Plain-language parts shown in the findings card. `explanation` is "why it
+  // matters"; whyKeep and whatCouldStop give the other side of the trade-off,
+  // because the chain records what a controller CAN do, not what it's for, so
+  // a flag is never proof that something is wrong.
   explanation: string;
-  nextStep?: string;
+  whyKeep?: string;
+  nextStep?: string; // "what to do"
+  whatCouldStop?: string;
   nextStepUrl?: string;
   nextStepLabel?: string; // defaults to "Open permission manager" in the UI
   affectedControllers?: `0x${string}`[];
@@ -73,14 +79,21 @@ export function checkConcentratedPower(
     id: "concentrated_power",
     triggered: affected.length > 0,
     severity: "warning",
-    title: "One controller holds both governing and broad execution power",
+    title: "Some controllers can add new controllers and send your funds",
     explanation:
-      "This controller can add new controllers or edit permissions, and can " +
-      "also transfer funds or call external contracts. If it's compromised, " +
-      "it could both act on the profile and grant itself or others further access.",
+      "If the key for one of these is ever stolen, the thief could send " +
+      "your funds and also add their own key. Removing the stolen one " +
+      "afterwards might not be enough.",
+    whyKeep:
+      "Devices you use every day, like your phone or browser extension, " +
+      "often hold both. So this isn't always a mistake.",
     nextStep:
-      "Consider narrowing this controller's permissions, or moving governing " +
-      "power (adding/editing controllers) to a separate, more narrowly-scoped controller.",
+      "Keep this power on as few controllers as you can. Remove it from " +
+      "any you don't recognise or no longer use.",
+    whatCouldStop:
+      "If you remove a controller, the device or app using it loses " +
+      "access to your profile. If you only take away some permissions, " +
+      "it can no longer send funds or add devices.",
     nextStepUrl: PERMISSION_MANAGER_URL,
     affectedControllers: affected.map((controller) => controller.address),
   };
@@ -98,14 +111,19 @@ export function checkNoRecoveryPath(
     id: "no_recovery_path",
     triggered,
     severity: "warning",
-    title: "No recovery path if this controller is lost",
+    title: "Only one controller, so no backup",
     explanation:
-      "Only one controller exists on this profile, with no separate recovery " +
-      "path. If access to it is ever lost, there's no other way to regain " +
-      "control of the profile.",
+      "If you lose access to this one controller, nobody can get into " +
+      "your profile again.",
+    whyKeep:
+      "Some people keep a single controller on purpose to keep things " +
+      "simple. It works, until something goes wrong with that device.",
     nextStep:
-      "Consider adding a dedicated recovery controller with only the permission " +
-      "to add new controllers, following LUKSO's recommended recovery pattern.",
+      "Add a second controller as a backup. Keep its key somewhere safe, " +
+      "and only give it the permissions a backup needs.",
+    whatCouldStop:
+      "Adding a backup doesn't change how anything works today. It just " +
+      "means you have a way back in.",
     nextStepUrl: PERMISSION_MANAGER_URL,
     affectedControllers: triggered
       ? controllers.map((controller) => controller.address)
@@ -135,17 +153,20 @@ export function checkSuspiciousDelegate(
     id: "suspicious_delegate",
     triggered,
     severity: "warning",
-    title: "Automatic reaction code doesn't implement the expected interface",
+    title: "The automatic helper on this profile may not be set up right",
     explanation:
-      "This profile has code configured to run automatically whenever it " +
-      "receives assets or notifications (this is called a 'Universal " +
-      "Receiver Delegate'), but the address it points to doesn't actually " +
-      "implement the interface a receiver delegate is expected to. Since " +
-      "this code runs automatically, an address here that doesn't " +
-      "implement the expected interface is worth a closer look.",
+      "Your profile has a small program that runs by itself whenever you " +
+      "receive assets or messages. The one set here doesn't look like the " +
+      "kind that's supposed to do that job.",
+    whyKeep:
+      "It may be intentional, such as a custom one you or an app set up " +
+      "on purpose.",
     nextStep:
-      "Confirm this address is one you recognize and intended to set. " +
-      "If not, consider removing or replacing it.",
+      "Check that you recognise this address. If you don't, replace or " +
+      "remove it.",
+    whatCouldStop:
+      "You'll still receive assets and messages. Only that automatic " +
+      "reaction stops.",
     nextStepUrl: PERMISSION_MANAGER_URL,
     affectedControllers:
       triggered && delegateAddress
@@ -171,12 +192,11 @@ export function checkNoControllers(
     id: "no_controllers",
     triggered,
     severity: "critical",
-    title: "This profile has no controllers at all",
+    title: "Nobody can use this profile",
     explanation:
-      "This profile has zero controllers. Nobody, including its original " +
-      "owner, can act on this profile anymore - there is no way to grant " +
-      "new permissions or regain control through the profile's normal " +
-      "permission system.",
+      "This profile has no controllers, so nobody can act on it, " +
+      "including its original owner. There's no way to give anyone " +
+      "access again.",
   };
 }
 
@@ -197,13 +217,11 @@ export function checkNoKeyManager(hasKeyManager: boolean): RiskFlagResult {
     id: "no_key_manager",
     triggered,
     severity: "critical",
-    title: "This profile isn't actually controlled by a Key Manager",
+    title: "This profile isn't protected by the usual permission system",
     explanation:
-      "This profile's owner isn't a genuine LSP6 Key Manager contract. " +
-      "That means the controller permissions this tool reads from " +
-      "AddressPermissions[] aren't actually being enforced - whatever " +
-      "currently owns this profile can act on it directly, regardless of " +
-      "what the permission data says.",
+      "Profiles normally use a 'Key Manager' to enforce who can do what. " +
+      "This one doesn't, so the permissions shown here aren't being " +
+      "enforced. Whatever owns the profile can act on it directly.",
   };
 }
 
@@ -233,14 +251,17 @@ export function checkGoverningOnlyController(
     severity: "warning",
     title: "A controller can add new controllers",
     explanation:
-      "This controller can't move funds itself, but it can add a new " +
-      "controller with any permissions, which amounts to the same thing. " +
-      "That's a normal setup for a recovery controller, so this is worth " +
-      "a check rather than a fix: make sure you recognize it and trust " +
-      "whoever holds its key.",
+      "It can't send funds itself, but it can add a new controller with " +
+      "any permissions, which comes to the same thing.",
+    whyKeep:
+      "This is the usual setup for a backup key, so it's often fine. " +
+      "It's worth a check, not a fix.",
     nextStep:
-      "If you recognize this controller and trust it, no action is needed. " +
-      "If you don't, remove it entirely.",
+      "If you recognise it and trust whoever holds its key, there's " +
+      "nothing to do. If you don't recognise it, remove it completely.",
+    whatCouldStop:
+      "Removing a backup key means you lose that way back in if you lose " +
+      "your main device. Make sure you have another way in first.",
     nextStepUrl: PERMISSION_MANAGER_URL,
     affectedControllers: affected.map((controller) => controller.address),
   };
@@ -259,8 +280,8 @@ export interface IncidentHit {
 // The UP Authorize page defaults to a "Standard Wallet" preset that includes
 // super permissions, so the safe action there is easy to get backwards.
 const AUTHORIZE_PAGE_WARNING =
-  "On that page use only the red 'Remove Controller Key' button. The " +
-  "'Authorize' button grants permissions, which is the opposite of what you want.";
+  "On that page, use only the red 'Remove Controller Key' button. The " +
+  "'Authorize' button gives permissions, which is the opposite of what you want.";
 
 // Flag 7: the profile holds a permission entry (or lists a controller) for
 // an address LUKSO named in the Nov 2026 email-recovery incident. Takes
@@ -277,26 +298,23 @@ export function checkIncidentLinkedController(
   const anyActive = active.length > 0;
 
   const title = attackerActive
-    ? "The attacker key from LUKSO's November 2026 incident is on this profile"
+    ? "The attacker's key from LUKSO's November 2026 incident is on this profile"
     : anyActive
-      ? "A recovery controller from LUKSO's November 2026 incident is on this profile"
+      ? "A recovery controller from LUKSO's November 2026 incident still has access"
       : "A controller from LUKSO's November 2026 incident is still listed on this profile";
 
   const explanation = attackerActive
-    ? "An address LUKSO identified as the attacker's key still has access " +
-      "to this profile. Removing its permissions isn't enough; the key " +
-      "should be removed completely. Any recovery-up controller listed " +
-      "below should go too."
+    ? "LUKSO identified this address as the attacker's key, and it still " +
+      "has access to your profile. Removing its permissions isn't enough. " +
+      "Remove the key completely. Any recovery controller listed below " +
+      "should go too."
     : anyActive
-      ? "This profile still has a controller from the email-recovery service " +
-        "LUKSO has switched off, and it still holds permissions. In the " +
-        "incident, controllers like this were used to add the attacker's key. " +
-        "Importing a profile or adding a device can bring it back, so check " +
-        "again afterwards."
-      : "It holds no permissions, so it can't act on this profile right now. " +
-        "But it's still in the controller list, and importing a profile or " +
-        "adding a device can register its permissions again. Removing it " +
-        "completely clears that.";
+      ? "LUKSO's email recovery has been switched off, but this controller " +
+        "from it still has permissions on your profile. Controllers like it " +
+        "were used to add the attacker's key."
+      : "It has no permissions, so it can't do anything right now. But " +
+        "importing your profile or adding a device can give its " +
+        "permissions back.";
 
   return {
     id: "incident_linked_controller",
@@ -304,12 +322,17 @@ export function checkIncidentLinkedController(
     severity: attackerActive ? "critical" : "warning",
     title,
     explanation,
+    whatCouldStop: anyActive
+      ? "Removing it won't change how your profile works day to day. The " +
+        "email recovery it belonged to has been switched off."
+      : "Nothing. It already can't do anything on your profile.",
     nextStep: anyActive
-      ? "Remove the listed controller entirely, make a file backup, and " +
-        "follow only LUKSO's official channels. LUKSO will never ask for " +
+      ? "Remove the listed controller completely, and make a file backup. " +
+        "Follow only LUKSO's official channels; LUKSO will never ask for " +
         "your recovery phrase. " +
         AUTHORIZE_PAGE_WARNING
-      : "Remove it entirely so it can't come back. " + AUTHORIZE_PAGE_WARNING,
+      : "Remove it completely so it can't come back. " +
+        AUTHORIZE_PAGE_WARNING,
     nextStepUrl: UP_AUTHORIZE_URL,
     nextStepLabel: "Open UP Authorize",
     affectedControllers: hits.map((hit) => hit.address),

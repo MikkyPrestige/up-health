@@ -257,7 +257,7 @@ describe("checkIncidentLinkedController", () => {
     const result = checkIncidentLinkedController([recovery]);
     expect(result.triggered).toBe(true);
     expect(result.severity).toBe("warning");
-    expect(result.explanation).toContain("still holds permissions");
+    expect(result.explanation).toContain("still has permissions");
     expect(result.affectedControllers).toEqual([recovery.address]);
   });
 
@@ -271,8 +271,8 @@ describe("checkIncidentLinkedController", () => {
     expect(result.triggered).toBe(true);
     expect(result.severity).toBe("warning");
     expect(result.title).toContain("still listed");
-    expect(result.explanation).toContain("holds no permissions");
-    expect(result.explanation).not.toContain("still holds permissions");
+    expect(result.explanation).toContain("no permissions");
+    expect(result.explanation).not.toContain("still has permissions");
   });
 
   it("does not escalate to critical for an attacker key with no permissions left", () => {
@@ -284,14 +284,14 @@ describe("checkIncidentLinkedController", () => {
 
   it("uses the active wording when active and empty hits are mixed", () => {
     const result = checkIncidentLinkedController([recoveryEmpty, recovery]);
-    expect(result.title).toContain("is on this profile");
+    expect(result.title).toContain("still has access");
     expect(result.affectedControllers).toHaveLength(2);
   });
 
   it("warns against the Authorize button on the UP Authorize page", () => {
     const result = checkIncidentLinkedController([recoveryEmpty]);
     expect(result.nextStep).toContain("Remove Controller Key");
-    expect(result.nextStep).toContain("grants permissions");
+    expect(result.nextStep).toContain("gives permissions");
   });
 });
 
@@ -310,5 +310,18 @@ describe("knownIncidents", () => {
       findIncidentAddress("0xA2F8FD85366D1B4A3B13C33A48CD959F6D1BA3A7")?.role
     ).toBe("attacker_key");
     expect(findIncidentAddress(ADDR_A)).toBeUndefined();
+  });
+});
+
+describe("plain-language finding parts", () => {
+  it("gives the incident flag a 'what could stop working' line in both states", () => {
+    const active = checkIncidentLinkedController([
+      { address: "0xd6ebb3c5c1836f5377d134c303f4ebb053562f6f", label: "recovery-up1", role: "recovery_profile", hasPermissions: true },
+    ]);
+    const empty = checkIncidentLinkedController([
+      { address: "0xd6ebb3c5c1836f5377d134c303f4ebb053562f6f", label: "recovery-up1", role: "recovery_profile", hasPermissions: false },
+    ]);
+    expect(active.whatCouldStop).toContain("day to day");
+    expect(empty.whatCouldStop).toContain("Nothing");
   });
 });

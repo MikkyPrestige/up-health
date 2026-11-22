@@ -21,7 +21,7 @@ export function GridBanner({ connectedAddress }: GridBannerProps) {
       <p className="mt-2 text-sm text-paper-dim">
         {connectedAddress
           ? "Showing diagnostics for this Grid's profile."
-          : "Connect to see the full risk breakdown for this Grid's profile."}
+          : "Connect to see what needs your attention on this Grid's profile."}
       </p>
       <a
         href="/"

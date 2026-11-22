@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "UP Health",
     description:
-      "See exactly who can do what to your Universal Profile, and whether anything's worth a closer look.",
+      "See which keys, devices and apps can act on your Universal Profile, what each is allowed to do, and what needs your attention.",
     url: "https://up-health.vercel.app",
     siteName: "UP Health",
     type: "website",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "UP Health",
     description:
-      "See exactly who can do what to your Universal Profile, and whether anything's worth a closer look.",
+      "See which keys, devices and apps can act on your Universal Profile, what each is allowed to do, and what needs your attention.",
   },
 };
 
